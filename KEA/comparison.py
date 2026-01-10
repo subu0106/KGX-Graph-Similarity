@@ -172,6 +172,112 @@ def calculate_similarity(kg1_triples, kg2_triples):
     similarity = kernel_matrix[0, 1]
     return similarity, relabelled_kg1.edges(data=True), relabelled_kg2.edges(data=True)
 
+
+def extract_all_labels(triples):
+    """
+    Extract all unique labels from triples (subjects, predicates, objects)
+
+    Args:
+        triples: List of triples [[s, p, o], ...]
+
+    Returns:
+        List of unique lowercase labels
+    """
+    labels = set()
+    for triple in triples:
+        if len(triple) == 3:
+            labels.add(triple[0].lower())  # subject
+            labels.add(triple[1].lower())  # predicate
+            labels.add(triple[2].lower())  # object
+    return list(labels)
+
+
+def calculate_gaussian_feature_similarity(kg1_triples, kg2_triples, sigma=1.0):
+    """
+    Compute Gaussian kernel similarity on SBERT embeddings
+
+    Formula: K(x1, x2) = exp(-||emb1 - emb2||^2 / (2 * sigma^2))
+
+    Args:
+        kg1_triples: First set of triples
+        kg2_triples: Second set of triples
+        sigma: Kernel width parameter (default: 1.0)
+
+    Returns:
+        float: Similarity score (0-1)
+    """
+    # Filter valid triples
+    kg1_triples = [sublist for sublist in kg1_triples if len(sublist) == 3]
+    kg2_triples = [sublist for sublist in kg2_triples if len(sublist) == 3]
+
+    if len(kg1_triples) == 0 or len(kg2_triples) == 0:
+        return 0.0
+
+    # Extract all labels
+    labels1 = extract_all_labels(kg1_triples)
+    labels2 = extract_all_labels(kg2_triples)
+
+    if not labels1 or not labels2:
+        return 0.0
+
+    # Get SBERT embeddings
+    embeddings1 = np.array([get_sbert_embedding(label) for label in labels1])
+    embeddings2 = np.array([get_sbert_embedding(label) for label in labels2])
+
+    # Compute pairwise Gaussian kernel
+    # For each label in graph1, find best match in graph2
+    similarities = []
+    for emb1 in embeddings1:
+        max_sim = 0
+        for emb2 in embeddings2:
+            # Euclidean distance
+            dist = np.linalg.norm(emb1 - emb2)
+            # Gaussian kernel
+            sim = np.exp(-dist**2 / (2 * sigma**2))
+            max_sim = max(max_sim, sim)
+        similarities.append(max_sim)
+
+    # Average of best matches
+    return float(np.mean(similarities))
+
+
+def calculate_composite_similarity(kg1_triples, kg2_triples, alpha=0.6, sigma=1.0):
+    """
+    Composite kernel: combines structural and semantic similarity
+
+    Formula: composite = alpha * structural + (1-alpha) * semantic
+
+    Args:
+        kg1_triples: First set of triples
+        kg2_triples: Second set of triples
+        alpha: Weight for structural similarity (default: 0.6)
+               1.0 = pure structural (original KEA)
+               0.0 = pure semantic
+        sigma: Gaussian kernel width (default: 1.0)
+
+    Returns:
+        dict: {
+            'composite': combined score,
+            'structural': WL kernel score,
+            'semantic': Gaussian kernel score
+        }
+    """
+    # Structural similarity (existing KEA with WL kernel)
+    structural_sim, _, _ = calculate_similarity(kg1_triples, kg2_triples)
+
+    # Semantic similarity (new Gaussian kernel)
+    semantic_sim = calculate_gaussian_feature_similarity(kg1_triples, kg2_triples, sigma)
+
+    # Composite
+    composite_sim = alpha * structural_sim + (1 - alpha) * semantic_sim
+
+    return {
+        'composite': float(composite_sim),
+        'structural': float(structural_sim),
+        'semantic': float(semantic_sim)
+    }
+
+
 # kg1_triples = [['Russian fighter jet', 'intercepted', 'U.S. reconnaissance plane'], ['Pentagon', 'says', 'incident occurred in international airspace north of Poland'], ['Russian jet', 'flew within', '100 feet of RC-135U'], ['RC-135U', 'was intercepted by', 'Russian SU-27 Flanker'], ['United States', 'is complaining about', 'incident']]
 
 # kg2_triples = [['Russian fighter jet', 'intercepted', 'U.S. reconnaissance plane'], ['United States', 'is complaining to', 'Moscow about the incident'], ['U.S. RC-135U', 'was flying over', 'Baltic Sea'], ['U.S. RC-135U', 'was intercepted by', 'Russian SU-27 Flanker'], ['Pentagon', 'said', 'incident occurred in international airspace north of Poland'], ['U.S. crew', 'believed', "Russian pilot's actions were unsafe and unprofessional"], ['Russian jet', 'flew around', 'U.S. plane several times'], ['Pentagon', 'will file', 'appropriate petition through diplomatic channels with Russia'], ['U.S. has complained about', 'incident involving', 'RC-135U and SU-27'], ['Russian jet', 'flew within', '100 feet of RC-135U over Sea of Okhotsk']]

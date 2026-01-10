@@ -1,0 +1,106 @@
+1. WebNLG (HIGHLY RECOMMENDED) ✓
+
+  Perfect match for your needs:
+  - Contains ~17,000 triple sets with multiple text variations (45,000 texts for English)
+  - Each sample has 1-7 triples typically (can filter for 5-10 range)
+  - Multiple human-written paraphrases for the same triple set
+  - 2024 version includes factual, counterfactual, and fictional variations
+
+  Download:
+  - https://huggingface.co/datasets/GEM/web_nlg
+  - https://huggingface.co/datasets/webnlg-challenge/web_nlg
+  - https://github.com/fuzihaofzh/webnlg-dataset
+  - https://www.tensorflow.org/datasets/catalog/web_nlg
+
+  Sources:
+  - https://www.emergentmind.com/topics/webnlg-dataset
+  - https://gem-benchmark.com/data_cards/web_nlg
+
+  ---
+  2. Text2KGBench (INCLUDES SIMILARITY SCORES) ✓
+
+  Great for similarity research:
+  - Contains similarity scores between test and train sentences using SBERT
+  - Two datasets: Wikidata-TekGen (13,474 sentences) and DBpedia-WebNLG (4,860 sentences)
+  - Includes 5 most similar train sentences for each test case
+  - Ontology-driven triple extraction
+
+  Download:
+  - https://github.com/cenguix/Text2KGBench
+  - Data available on Zenodo (linked in GitHub)
+
+  Sources:
+  - https://arxiv.org/abs/2308.02357
+  - https://paperswithcode.com/dataset/text2kgbench
+
+  ---
+  3. KELM Corpus (LARGE SCALE)
+
+  15M synthetic sentences from Wikidata:
+  - Each example has triples: (subject, relation, object)
+  - Some subjects have multiple relations (3-5 triples per entity)
+  - Can filter for 5-10 triple sets
+  - Generated using T5 model with variations
+
+  Download:
+  - https://huggingface.co/datasets/google-research-datasets/kelm
+  - https://github.com/google-research-datasets/KELM-corpus
+
+  Sources:
+  - https://paperswithcode.com/dataset/kelm
+  - https://openreview.net/pdf?id=FkG-sX5CE_
+
+  ---
+  4. FEVER (FACT VERIFICATION)
+
+  185,445 claims with evidence:
+  - Claims are paraphrases/alterations of Wikipedia sentences
+  - Can extract semantic triples using OpenIE
+  - Recent work converts claims to triples for similarity measurement
+  - Evidence sentences support multiple triple extraction
+
+  Download:
+  - https://fever.ai/dataset/fever.html
+  - https://huggingface.co/datasets/fever/fever
+  - https://github.com/awslabs/fever
+
+  Sources:
+  - https://arxiv.org/abs/1803.05355
+  - https://arxiv.org/html/2312.11785v1
+
+  ---
+  5. CoDEx (HARD NEGATIVES)
+
+  Knowledge graph completion with similarity:
+  - Contains hard negative triples (plausible but false)
+  - Three KGs varying in size
+  - Includes multilingual entity/relation descriptions
+  - Good for semantic equivalence testing
+
+  Download:
+  - Available through https://aclanthology.org/2020.emnlp-main.669/
+
+  Sources:
+  - https://aclanthology.org/2020.emnlp-main.669/
+
+  ---
+  My Recommendation:
+
+  For your exact needs (5-10 triples, semantic variations, similarity scores):
+
+  1. Start with WebNLG - Has multiple human-written text variations for same triple sets
+  2. Use Text2KGBench - Already has SBERT similarity scores computed
+  3. Combine with KELM - For additional scale and variations
+
+  Why WebNLG is best:
+  - Multiple crowd-sourced paraphrases per triple set (like your low-temperature LLM approach)
+  - Can filter for 5-10 triple sets
+  - Well-established benchmark with quality annotations
+  - Easy to compute similarity scores between variations
+
+  Sources:
+  - https://gem-benchmark.com/shared_task
+  - https://paperswithcode.com/dataset/webnlg
+  - https://github.com/cenguix/Text2KGBench
+  - https://huggingface.co/datasets/google-research-datasets/kelm
+  - https://fever.ai/dataset/fever.html

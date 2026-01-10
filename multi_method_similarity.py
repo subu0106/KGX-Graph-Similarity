@@ -2,10 +2,12 @@
 """
 Multi-method graph similarity comparison
 Compares gemini answer pairs using:
-1. KEA (Graph Kernel - Weisfeiler-Lehman)
-2. TransE graph embedding
-3. RotatE graph embedding
-4. WL kernel method
+1. KEA (Graph Kernel - Weisfeiler-Lehman + Clustering)
+2. KEA Composite (Gaussian + WL Kernel)
+3. KEA Semantic (Gaussian kernel only)
+4. TransE graph embedding
+5. RotatE graph embedding
+6. Pure WL kernel (structural only)
 """
 
 import csv
@@ -15,7 +17,7 @@ import torch
 import torch.nn as nn
 import networkx as nx
 from sklearn.metrics.pairwise import cosine_similarity
-from KEA import calculate_similarity  # Import existing KEA method
+from KEA import calculate_similarity, calculate_composite_similarity  # Import KEA methods
 from grakel import Graph
 from grakel.kernels import WeisfeilerLehman
 import matplotlib.pyplot as plt
@@ -325,6 +327,9 @@ def process_dataset(input_file, output_file):
             print("Empty triples - skipping")
             result.update({
                 'kea_similarity': None,
+                'kea_composite': None,
+                'kea_structural': None,
+                'kea_semantic': None,
                 'transe_similarity': None,
                 'rotate_similarity': None,
                 'wl_kernel_similarity': None
@@ -339,6 +344,22 @@ def process_dataset(input_file, output_file):
             except Exception as e:
                 print(f"   Error: {e}")
                 result['kea_similarity'] = None
+
+            # 1b. KEA Composite (Gaussian + WL kernel)
+            print("\n1b. Calculating KEA Composite (Gaussian + WL)...")
+            try:
+                composite_result = calculate_composite_similarity(triples1, triples2, alpha=0.1, sigma=1.0)
+                print(f"   KEA Composite: {composite_result['composite']:.4f}")
+                print(f"   - Structural: {composite_result['structural']:.4f}")
+                print(f"   - Semantic: {composite_result['semantic']:.4f}")
+                result['kea_composite'] = composite_result['composite']
+                result['kea_structural'] = composite_result['structural']
+                result['kea_semantic'] = composite_result['semantic']
+            except Exception as e:
+                print(f"   Error: {e}")
+                result['kea_composite'] = None
+                result['kea_structural'] = None
+                result['kea_semantic'] = None
 
             # 2. TransE method
             print("\n2. Calculating TransE similarity...")
@@ -375,8 +396,8 @@ def process_dataset(input_file, output_file):
     # Write results
     with open(output_file, 'w', encoding='utf-8', newline='') as f:
         fieldnames = ['question', 'gemini_answer_1', 'gemini_answer_2',
-                     'kea_similarity', 'transe_similarity', 'rotate_similarity',
-                     'wl_kernel_similarity']
+                     'kea_similarity', 'kea_composite', 'kea_structural', 'kea_semantic',
+                     'transe_similarity', 'rotate_similarity', 'wl_kernel_similarity']
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(results)
@@ -407,6 +428,8 @@ def plot_individual_method_results(results, output_file_base):
 
     methods = {
         'KEA (Semantic Clustering + WL Kernel)': ('kea_similarity', '#2E86AB'),
+        'KEA Composite (Gaussian + WL)': ('kea_composite', '#1E5F8C'),
+        'KEA Semantic (Gaussian Only)': ('kea_semantic', '#5BA3D0'),
         'TransE (Translation Embedding)': ('transe_similarity', '#A23B72'),
         'RotatE (Rotation Embedding)': ('rotate_similarity', '#F18F01'),
         'Pure WL Kernel (Structural Only)': ('wl_kernel_similarity', '#6A994E')
@@ -568,11 +591,16 @@ if __name__ == "__main__":
     print("1. KEA (Semantic Clustering + WL Kernel)")
     print("   - Uses SBERT + Agglomerative Clustering for semantic grouping")
     print("   - Then applies Weisfeiler-Lehman kernel")
-    print("2. TransE (Translation-based embedding)")
+    print("2. KEA Composite (Gaussian + WL Kernel)")
+    print("   - Combines structural (WL) + semantic (Gaussian) similarity")
+    print("   - Formula: alpha * structural + (1-alpha) * semantic")
+    print("3. KEA Semantic (Gaussian kernel on SBERT)")
+    print("   - Direct semantic similarity without clustering")
+    print("4. TransE (Translation-based embedding)")
     print("   - h + r ≈ t in embedding space")
-    print("3. RotatE (Rotation-based embedding)")
+    print("5. RotatE (Rotation-based embedding)")
     print("   - Relations as rotations in complex space")
-    print("4. Pure WL Kernel (Structural similarity only)")
+    print("6. Pure WL Kernel (Structural similarity only)")
     print("   - Raw Weisfeiler-Lehman kernel without semantic preprocessing")
     print()
 
