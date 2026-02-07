@@ -1,0 +1,73 @@
+SUMMARY STATISTICS
+
+KEA (Semantic Clustering + WL Kernel):
+  Average:  71.16%
+  Median:   80.00%
+  Std Dev:  30.78%
+  Max:      100.00%
+  Min:      5.56%
+  Perfect (≈1.0): 47/98 (48.0%)
+  High (≥0.8):    50/98 (51.0%)
+
+KEA Composite (Gaussian + WL):
+  Average:  28.28%
+  Median:   28.14%
+  Std Dev:  12.76%
+  Max:      79.54%
+  Min:      3.32%
+  Perfect (≈1.0): 0/98 (0.0%)
+  High (≥0.8):    0/98 (0.0%)
+
+KEA Semantic (Gaussian Only):
+  Average:  23.51%
+  Median:   23.00%
+  Std Dev:  12.22%
+  Max:      77.26%
+  Min:      3.07%
+  Perfect (≈1.0): 0/98 (0.0%)
+  High (≥0.8):    0/98 (0.0%)
+
+TransE (Translation Embedding):
+  Average:  -32.18%
+  Median:   -38.44%
+  Std Dev:  24.13%
+  Max:      34.60%
+  Min:      -69.76%
+  Perfect (≈1.0): 0/98 (0.0%)
+  High (≥0.8):    0/98 (0.0%)
+
+RotatE (Rotation Embedding):
+  Average:  3.66%
+  Median:   0.51%
+  Std Dev:  18.00%
+  Max:      51.83%
+  Min:      -27.94%
+  Perfect (≈1.0): 0/98 (0.0%)
+  High (≥0.8):    0/98 (0.0%)
+
+Pure WL Kernel (Structural Only):
+  Average:  5.57%
+  Median:   0.00%
+  Std Dev:  11.91%
+  Max:      60.00%
+  Min:      0.00%
+  Perfect (≈1.0): 0/98 (0.0%)
+  High (≥0.8):    0/98 (0.0%)
+
+GESML (GAP + Top-k + ReLU):
+  Average:  37.25%
+  Median:   34.54%
+  Std Dev:  14.66%
+  Max:      91.02%
+  Min:      7.40%
+  Perfect (≈1.0): 0/98 (0.0%)
+  High (≥0.8):    2/98 (2.0%)
+
+AA-KEA (Attention + WL):
+  Average:  87.74%
+  Median:   100.00%
+  Std Dev:  20.52%
+  Max:      100.00%
+  Min:      15.81%
+  Perfect (≈1.0): 68/98 (69.4%)
+  High (≥0.8):    70/98 (71.4%)
