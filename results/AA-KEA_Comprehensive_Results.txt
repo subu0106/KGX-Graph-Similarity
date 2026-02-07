@@ -1,0 +1,127 @@
+AA-KEA BENCHMARK RESULTS
+Knowledge Graph Similarity Evaluation
+
+
+DATASET 1: PubMedQA (Biomedical Research Questions)
+
+Model: meta-llama/Llama-2-7b-chat-hf
+  Average:  48.51%
+  Median:   46.35%
+  Std Dev:  24.47%
+  Max:      100.00%
+  Min:      7.65%
+  Perfect (≈1.0): 4/94 (4.3%)
+  High (≥0.8):    11/94 (11.7%)
+
+Model: google/gemma-7b-it
+  Average:  47.47%
+  Median:   44.35%
+  Std Dev:  26.76%
+  Max:      100.00%
+  Min:      6.80%
+  Perfect (≈1.0): 6/86 (7.0%)
+  High (≥0.8):    11/86 (12.8%)
+
+Model: mistralai/Mistral-7B-Instruct-v0.2
+  Average:  43.34%
+  Median:   42.32%
+  Std Dev:  24.06%
+  Max:      100.00%
+  Min:      2.21%
+  Perfect (≈1.0): 3/96 (3.1%)
+  High (≥0.8):    7/96 (7.3%)
+
+
+DATASET 2: MessaQA (General Health Questions)
+
+
+Model: meta-llama/Llama-2-7b-chat-hf
+  Average:  57.33%
+  Median:   55.06%
+  Std Dev:  25.26%
+  Max:      100.00%
+  Min:      12.22%
+  Perfect (≈1.0): 8/94 (8.5%)
+  High (≥0.8):    20/94 (21.3%)
+
+Model: google/gemma-7b-it
+  Average:  59.69%
+  Median:   61.31%
+  Std Dev:  23.28%
+  Max:      100.00%
+  Min:      15.55%
+  Perfect (≈1.0): 8/90 (8.9%)
+  High (≥0.8):    17/90 (18.9%)
+
+Model: mistralai/Mistral-7B-Instruct-v0.2
+  Average:  57.19%
+  Median:   55.80%
+  Std Dev:  22.87%
+  Max:      100.00%
+  Min:      11.37%
+  Perfect (≈1.0): 7/92 (7.6%)
+  High (≥0.8):    15/92 (16.3%)
+
+
+
+CROSS-DATASET SUMMARY
+
+
+PubMedQA (Technical Biomedical Questions):
+  Best Model:    Llama-2-7b-chat-hf (48.51% avg)
+  Highest Max:   All models reached 100%
+  Best Median:   Llama-2-7b-chat-hf (46.35%)
+  Best High%:    Gemma-7b-it (12.8%)
+
+MessaQA (General Health Questions):
+  Best Model:    Gemma-7b-it (59.69% avg)
+  Highest Max:   All models reached 100%
+  Best Median:   Gemma-7b-it (61.31%)
+  Best High%:    Llama-2-7b-chat-hf (21.3%)
+
+CROSS-MODEL SUMMARY:
+
+Llama-2-7b-chat-hf:
+  PubMedQA:  48.51% | MessaQA: 57.33% | Improvement: +8.82%
+  Better on: MessaQA (general health questions)
+
+Gemma-7b-it:
+  PubMedQA:  47.47% | MessaQA: 59.69% | Improvement: +12.22%
+  Better on: MessaQA (general health questions)
+  Best overall performance on MessaQA
+
+Mistral-7B-Instruct-v0.2:
+  PubMedQA:  43.34% | MessaQA: 57.19% | Improvement: +13.85%
+  Better on: MessaQA (general health questions)
+  Largest improvement between datasets
+
+KEY FINDINGS:
+
+1. All models performed better on MessaQA (general health) than
+   PubMedQA (technical biomedical), with improvements of 9-14%
+
+2. Gemma-7b-it achieved the highest average similarity (59.69%)
+   and median (61.31%) on MessaQA
+
+3. Llama-2-7b-chat-hf had the best performance on PubMedQA
+   (48.51% avg) and highest proportion of high-quality graphs
+   on MessaQA (21.3% ≥0.8)
+
+4. Mistral showed the largest performance gap between datasets
+   (13.85% improvement), suggesting stronger adaptation to
+   general vs. technical questions
+
+5. All models achieved 100% similarity on some questions,
+   indicating capability for perfect knowledge graph generation
+   in specific cases
+
+6. Standard deviations (22-27%) indicate high variability in
+   performance across different question types within each dataset
+
+NOTES:
+- AA-KEA: Attention-Augmented KEA with temperature-scaled
+  softmax (T=0.1) + WL Kernel (5 iterations)
+- Perfect scores (≈1.0): Similarity ≥ 0.95
+- High scores (≥0.8): Strong semantic and structural alignment
+- All comparisons: LLM KG vs Gold KG (reference answer)
+
