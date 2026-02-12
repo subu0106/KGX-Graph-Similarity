@@ -31,7 +31,7 @@ import gc  # For garbage collection
 
 # Add GAP directory to path for GESML import
 sys.path.append(os.path.join(os.path.dirname(__file__), 'GAP'))
-from gesml_node_similarity import GESMLNodeSimilarity  # Node-level comparison (no training)
+# from gesml_node_similarity import GESMLNodeSimilarity  # Node-level comparison (no training)
 
 # Import Attention-Augmented KEA
 from Attention_Augmented_KEA.attention_augmented_kea import (
@@ -330,8 +330,10 @@ def process_dataset(input_file, output_file):
     """
     results = []
     fieldnames = ['question', 'gemini_answer_1', 'gemini_answer_2',
-                #  'kea_similarity', 'kea_composite', 'kea_structural', 'kea_semantic',
-                #  'transe_similarity', 'rotate_similarity', 'wl_kernel_similarity', 'gesml_similarity',
+                 'kea_similarity',
+                 'kea_composite', 'kea_structural', 'kea_semantic',
+                 'transe_similarity', 'rotate_similarity', 'wl_kernel_similarity', 
+                #  'gesml_similarity',
                  'aa_kea_similarity'
                 #  
                 ]
@@ -369,13 +371,13 @@ def process_dataset(input_file, output_file):
             if not triples1 or not triples2:
                 print("skipped (empty triples)")
                 result.update({
-                    # 'kea_similarity': None,
-                    # 'kea_composite': None,
-                    # 'kea_structural': None,
-                    # 'kea_semantic': None,
-                    # 'transe_similarity': None,
-                    # 'rotate_similarity': None,
-                    # 'wl_kernel_similarity': None,
+                    'kea_similarity': None,
+                    'kea_composite': None,
+                    'kea_structural': None,
+                    'kea_semantic': None,
+                    'transe_similarity': None,
+                    'rotate_similarity': None,
+                    'wl_kernel_similarity': None,
                     # 'gesml_similarity': None,
                     'aa_kea_similarity': None,
                     # 'aa_kea_neighborhood_similarity': None
@@ -383,43 +385,43 @@ def process_dataset(input_file, output_file):
             else:
                 # Create fresh calculators for each row to prevent memory accumulation
                 embedding_calculator = GraphEmbeddingSimilarity(embedding_dim=50)
-                gesml_calculator = GESMLNodeSimilarity(embedding_dim=50, top_k=5)
+                # gesml_calculator = GESMLNodeSimilarity(embedding_dim=50, top_k=5)
 
-                # # 1. KEA method
-                # try:
-                #     kea_sim, _, _ = calculate_similarity(triples1, triples2)
-                #     result['kea_similarity'] = kea_sim
-                # except Exception:
-                #     result['kea_similarity'] = None
+                # 1. KEA method
+                try:
+                    kea_sim, _, _ = calculate_similarity(triples1, triples2)
+                    result['kea_similarity'] = kea_sim
+                except Exception:
+                    result['kea_similarity'] = None
 
-                # # 1b. KEA Composite
-                # try:
-                #     composite_result = calculate_composite_similarity(triples1, triples2, alpha=0.1, sigma=1.0)
-                #     result['kea_composite'] = composite_result['composite']
-                #     result['kea_structural'] = composite_result['structural']
-                #     result['kea_semantic'] = composite_result['semantic']
-                # except Exception:
-                #     result['kea_composite'] = None
-                #     result['kea_structural'] = None
-                #     result['kea_semantic'] = None
+                # 1b. KEA Composite
+                try:
+                    composite_result = calculate_composite_similarity(triples1, triples2, alpha=0.1, sigma=1.0)
+                    result['kea_composite'] = composite_result['composite']
+                    result['kea_structural'] = composite_result['structural']
+                    result['kea_semantic'] = composite_result['semantic']
+                except Exception:
+                    result['kea_composite'] = None
+                    result['kea_structural'] = None
+                    result['kea_semantic'] = None
 
-                # # 2. TransE method
-                # try:
-                #     result['transe_similarity'] = embedding_calculator.calculate_transe_similarity(triples1, triples2)
-                # except Exception:
-                #     result['transe_similarity'] = None
+                # 2. TransE method
+                try:
+                    result['transe_similarity'] = embedding_calculator.calculate_transe_similarity(triples1, triples2)
+                except Exception:
+                    result['transe_similarity'] = None
 
-                # # 3. RotatE method
-                # try:
-                #     result['rotate_similarity'] = embedding_calculator.calculate_rotate_similarity(triples1, triples2)
-                # except Exception:
-                #     result['rotate_similarity'] = None
+                # 3. RotatE method
+                try:
+                    result['rotate_similarity'] = embedding_calculator.calculate_rotate_similarity(triples1, triples2)
+                except Exception:
+                    result['rotate_similarity'] = None
 
-                # # 4. Pure WL Kernel method
-                # try:
-                #     result['wl_kernel_similarity'] = calculate_pure_wl_kernel_similarity(triples1, triples2)
-                # except Exception:
-                #     result['wl_kernel_similarity'] = None
+                # 4. Pure WL Kernel method
+                try:
+                    result['wl_kernel_similarity'] = calculate_pure_wl_kernel_similarity(triples1, triples2)
+                except Exception:
+                    result['wl_kernel_similarity'] = None
 
                 # # 5. GESML method
                 # try:
@@ -441,7 +443,7 @@ def process_dataset(input_file, output_file):
 
                 # Clean up calculators
                 del embedding_calculator
-                del gesml_calculator
+                # del gesml_calculator
 
             # Write result immediately (don't accumulate in memory)
             writer.writerow(result)
@@ -480,12 +482,12 @@ def plot_individual_method_results(results, output_file_base):
     plot_df = df.dropna(subset=['aa_kea_similarity'])
 
     methods = {
-        # 'KEA (Semantic Clustering + WL Kernel)': ('kea_similarity', '#2E86AB'),
-        # 'KEA Composite (Gaussian + WL)': ('kea_composite', '#1E5F8C'),
-        # 'KEA Semantic (Gaussian Only)': ('kea_semantic', '#5BA3D0'),
-        # 'TransE (Translation Embedding)': ('transe_similarity', '#A23B72'),
-        # 'RotatE (Rotation Embedding)': ('rotate_similarity', '#F18F01'),
-        # 'Pure WL Kernel (Structural Only)': ('wl_kernel_similarity', '#6A994E'),
+        'KEA (Semantic Clustering + WL Kernel)': ('kea_similarity', '#2E86AB'),
+        'KEA Composite (Gaussian + WL)': ('kea_composite', '#1E5F8C'),
+        'KEA Semantic (Gaussian Only)': ('kea_semantic', '#5BA3D0'),
+        'TransE (Translation Embedding)': ('transe_similarity', '#A23B72'),
+        'RotatE (Rotation Embedding)': ('rotate_similarity', '#F18F01'),
+        'Pure WL Kernel (Structural Only)': ('wl_kernel_similarity', '#6A994E'),
         # 'GESML (GAP + Top-k + ReLU)': ('gesml_similarity', '#E63946'),
         'AA-KEA (Attention + WL)': ('aa_kea_similarity', '#9B59B6')  # Purple
         # 'AA-KEA-Neighbor (Context + WL)': ('aa_kea_neighborhood_similarity', '#1ABC9C')  # Teal
@@ -546,76 +548,76 @@ def plot_individual_method_results(results, output_file_base):
     fig = plt.figure(figsize=(16, 10))
 
     
-    # # Plot 1: All methods comparison
-    # ax1 = plt.subplot(2, 2, 1)
-    # for method_name, (col_name, color) in methods.items():
-    #     scores = plot_df[col_name] * 100
-    #     ax1.plot(plot_df['Question_ID'], scores,
-    #             marker='o', linestyle='-', linewidth=1.5,
-    #             markersize=4, color=color, label=method_name.split('(')[0].strip(),
-    #             alpha=0.7)
+    # Plot 1: All methods comparison
+    ax1 = plt.subplot(2, 2, 1)
+    for method_name, (col_name, color) in methods.items():
+        scores = plot_df[col_name] * 100
+        ax1.plot(plot_df['Question_ID'], scores,
+                marker='o', linestyle='-', linewidth=1.5,
+                markersize=4, color=color, label=method_name.split('(')[0].strip(),
+                alpha=0.7)
 
-    # ax1.set_title('All Methods Comparison', fontsize=12, fontweight='bold')
-    # ax1.set_ylabel('Similarity (%)', fontsize=10)
-    # ax1.set_xlabel('Question ID', fontsize=10)
-    # ax1.legend(loc='best', fontsize=8)
-    # ax1.grid(True, linestyle='--', alpha=0.3)
+    ax1.set_title('All Methods Comparison', fontsize=12, fontweight='bold')
+    ax1.set_ylabel('Similarity (%)', fontsize=10)
+    ax1.set_xlabel('Question ID', fontsize=10)
+    ax1.legend(loc='best', fontsize=8)
+    ax1.grid(True, linestyle='--', alpha=0.3)
 
-    # # Plot 2: Average scores comparison
-    # ax2 = plt.subplot(2, 2, 2)
-    # method_labels = [name.split('(')[0].strip() for name in methods.keys()]
-    # averages = [plot_df[col] * 100 for _, (col, _) in methods.items()]
-    # colors_list = [color for _, (_, color) in methods.items()]
+    # Plot 2: Average scores comparison
+    ax2 = plt.subplot(2, 2, 2)
+    method_labels = [name.split('(')[0].strip() for name in methods.keys()]
+    averages = [plot_df[col] * 100 for _, (col, _) in methods.items()]
+    colors_list = [color for _, (_, color) in methods.items()]
 
-    # bp = ax2.boxplot(averages, tick_labels=method_labels, patch_artist=True)
-    # for patch, color in zip(bp['boxes'], colors_list):
-    #     patch.set_facecolor(color)
-    #     patch.set_alpha(0.6)
+    bp = ax2.boxplot(averages, tick_labels=method_labels, patch_artist=True)
+    for patch, color in zip(bp['boxes'], colors_list):
+        patch.set_facecolor(color)
+        patch.set_alpha(0.6)
 
-    # ax2.set_title('Score Distributions', fontsize=12, fontweight='bold')
-    # ax2.set_ylabel('Similarity (%)', fontsize=10)
-    # ax2.grid(True, axis='y', linestyle='--', alpha=0.3)
+    ax2.set_title('Score Distributions', fontsize=12, fontweight='bold')
+    ax2.set_ylabel('Similarity (%)', fontsize=10)
+    ax2.grid(True, axis='y', linestyle='--', alpha=0.3)
 
-    # # Plot 3: Bar chart of averages
-    # ax3 = plt.subplot(2, 2, 3)
-    # avg_values = [plot_df[col].mean() * 100 for _, (col, _) in methods.items()]
-    # bars = ax3.bar(method_labels, avg_values, color=colors_list, alpha=0.7, edgecolor='black')
+    # Plot 3: Bar chart of averages
+    ax3 = plt.subplot(2, 2, 3)
+    avg_values = [plot_df[col].mean() * 100 for _, (col, _) in methods.items()]
+    bars = ax3.bar(method_labels, avg_values, color=colors_list, alpha=0.7, edgecolor='black')
 
-    # for bar, avg in zip(bars, avg_values):
-    #     height = bar.get_height()
-    #     ax3.text(bar.get_x() + bar.get_width()/2., height,
-    #             f'{avg:.1f}%', ha='center', va='bottom', fontsize=9, fontweight='bold')
+    for bar, avg in zip(bars, avg_values):
+        height = bar.get_height()
+        ax3.text(bar.get_x() + bar.get_width()/2., height,
+                f'{avg:.1f}%', ha='center', va='bottom', fontsize=9, fontweight='bold')
 
-    # ax3.set_title('Average Similarity by Method', fontsize=12, fontweight='bold')
-    # ax3.set_ylabel('Average Similarity (%)', fontsize=10)
-    # ax3.set_ylim(0, 100)
-    # ax3.grid(True, axis='y', linestyle='--', alpha=0.3)
-    # plt.xticks(rotation=15, ha='right')
+    ax3.set_title('Average Similarity by Method', fontsize=12, fontweight='bold')
+    ax3.set_ylabel('Average Similarity (%)', fontsize=10)
+    ax3.set_ylim(0, 100)
+    ax3.grid(True, axis='y', linestyle='--', alpha=0.3)
+    plt.xticks(rotation=15, ha='right')
 
-    # # Plot 4: KEA vs Pure WL
-    # ax4 = plt.subplot(2, 2, 4)
-    # kea_scores = plot_df['kea_similarity'] * 100
-    # wl_scores = plot_df['wl_kernel_similarity'] * 100
+    # Plot 4: KEA vs Pure WL
+    ax4 = plt.subplot(2, 2, 4)
+    kea_scores = plot_df['kea_similarity'] * 100
+    wl_scores = plot_df['wl_kernel_similarity'] * 100
 
-    # ax4.plot(plot_df['Question_ID'], kea_scores,
-    #         marker='o', linestyle='-', linewidth=2, markersize=5,
-    #         color='#2E86AB', label='KEA (with semantics)', alpha=0.8)
-    # ax4.plot(plot_df['Question_ID'], wl_scores,
-    #         marker='d', linestyle='--', linewidth=2, markersize=5,
-    #         color='#6A994E', label='Pure WL (structural)', alpha=0.8)
+    ax4.plot(plot_df['Question_ID'], kea_scores,
+            marker='o', linestyle='-', linewidth=2, markersize=5,
+            color='#2E86AB', label='KEA (with semantics)', alpha=0.8)
+    ax4.plot(plot_df['Question_ID'], wl_scores,
+            marker='d', linestyle='--', linewidth=2, markersize=5,
+            color='#6A994E', label='Pure WL (structural)', alpha=0.8)
 
-    # ax4.set_title('KEA vs Pure WL: Semantic Impact', fontsize=12, fontweight='bold')
-    # ax4.set_ylabel('Similarity (%)', fontsize=10)
-    # ax4.set_xlabel('Question ID', fontsize=10)
-    # ax4.legend(loc='best', fontsize=9)
-    # ax4.grid(True, linestyle='--', alpha=0.3)
+    ax4.set_title('KEA vs Pure WL: Semantic Impact', fontsize=12, fontweight='bold')
+    ax4.set_ylabel('Similarity (%)', fontsize=10)
+    ax4.set_xlabel('Question ID', fontsize=10)
+    ax4.legend(loc='best', fontsize=9)
+    ax4.grid(True, linestyle='--', alpha=0.3)
 
-    # plt.tight_layout()
-    # base_name = os.path.basename(output_file_base)
-    # comparison_file = os.path.join(plots_dir, f"{base_name}_comparison.png")
-    # plt.savefig(comparison_file, dpi=300, bbox_inches='tight')
-    # print(f"  ✓ Saved: {os.path.basename(comparison_file)}")
-    # plt.close()
+    plt.tight_layout()
+    base_name = os.path.basename(output_file_base)
+    comparison_file = os.path.join(plots_dir, f"{base_name}_comparison.png")
+    plt.savefig(comparison_file, dpi=300, bbox_inches='tight')
+    print(f"  ✓ Saved: {os.path.basename(comparison_file)}")
+    plt.close()
 
     print("\n" + "="*60)
     print("SUMMARY STATISTICS")
@@ -645,9 +647,9 @@ if __name__ == "__main__":
     parser.add_argument('--limit', type=int, default=None,
                         help='Limit number of rows to process (for testing). Default: process all rows')
     parser.add_argument('--input', type=str,
-                        default="/Users/subu/Desktop/FYP/KGX-Graph-Similarity/final_dataset_opensrc_models/pubmed/pubmedqa_mistralai_Mistral-7B-Instruct-v0.2.csv",
+                        default="/Users/subu/Desktop/FYP/KGX-Graph-Similarity/data/validation_set.csv",
                         help='Input CSV file path')
-    parser.add_argument('--output', type=str, default="/Users/subu/Desktop/FYP/KGX-Graph-Similarity/results/pubmedqa_mistralai/multi_method_similarity_results.csv",
+    parser.add_argument('--output', type=str, default="/Users/subu/Desktop/FYP/KGX-Graph-Similarity/results_newww/validation_for_all_methods/multi_method_similarity_results.csv",
                         help='Output CSV file path')
     parser.add_argument('--skip-plots', action='store_true',
                         help='Skip generating plots (saves memory)')
@@ -666,20 +668,20 @@ if __name__ == "__main__":
         print(f"\n*** LIMITING TO {args.limit} ROWS (for testing) ***\n")
 
     # print("\nMethods:")
-    # print("1. KEA (Semantic Clustering + WL Kernel)")
-    # print("   - Uses SBERT + Agglomerative Clustering for semantic grouping")
-    # print("   - Then applies Weisfeiler-Lehman kernel")
-    # print("2. KEA Composite (Gaussian + WL Kernel)")
-    # print("   - Combines structural (WL) + semantic (Gaussian) similarity")
-    # print("   - Formula: alpha * structural + (1-alpha) * semantic")
-    # print("3. KEA Semantic (Gaussian kernel on SBERT)")
-    # print("   - Direct semantic similarity without clustering")
-    # print("4. TransE (Translation-based embedding)")
-    # print("   - h + r ≈ t in embedding space")
-    # print("5. RotatE (Rotation-based embedding)")
-    # print("   - Relations as rotations in complex space")
-    # print("6. Pure WL Kernel (Structural similarity only)")
-    # print("   - Raw Weisfeiler-Lehman kernel without semantic preprocessing")
+    print("1. KEA (Semantic Clustering + WL Kernel)")
+    print("   - Uses SBERT + Agglomerative Clustering for semantic grouping")
+    print("   - Then applies Weisfeiler-Lehman kernel")
+    print("2. KEA Composite (Gaussian + WL Kernel)")
+    print("   - Combines structural (WL) + semantic (Gaussian) similarity")
+    print("   - Formula: alpha * structural + (1-alpha) * semantic")
+    print("3. KEA Semantic (Gaussian kernel on SBERT)")
+    print("   - Direct semantic similarity without clustering")
+    print("4. TransE (Translation-based embedding)")
+    print("   - h + r ≈ t in embedding space")
+    print("5. RotatE (Rotation-based embedding)")
+    print("   - Relations as rotations in complex space")
+    print("6. Pure WL Kernel (Structural similarity only)")
+    print("   - Raw Weisfeiler-Lehman kernel without semantic preprocessing")
     # print("7. GESML (Node-Level, No Training)")
     # print("   - Context-sensitive node embeddings with attention")
     # print("   - Top-k pooling for structural patterns")

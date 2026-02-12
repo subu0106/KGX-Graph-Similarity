@@ -215,12 +215,18 @@ def compute_attention_aligned_labels(graph1_labels, graph2_labels, aligner):
     return label_mapping_g1, label_mapping_g2
 
 
-def compute_soft_label_mapping(graph1_labels, graph2_labels, similarity_threshold=None):
+def compute_soft_label_mapping(graph1_labels, graph2_labels, similarity_threshold=0.65, prefix="anchor"):
     """
     Alternative: Compute soft labels using direct embedding similarity with learned weighting.
 
-    This version doesn't use hard thresholds - instead it uses the full similarity
-    distribution to derive context-sensitive labels.
+    This version uses a similarity threshold - only aligns labels if their cosine similarity
+    is above the threshold.
+
+    Args:
+        graph1_labels: Labels from graph 1
+        graph2_labels: Labels from graph 2
+        similarity_threshold: Minimum cosine similarity required for alignment (default: 0.65)
+        prefix: Prefix for anchor labels (e.g., "node" or "rel" to distinguish types)
     """
     if not graph1_labels or not graph2_labels:
         return {}, {}
@@ -235,11 +241,6 @@ def compute_soft_label_mapping(graph1_labels, graph2_labels, similarity_threshol
     emb2_norm = emb2 / (np.linalg.norm(emb2, axis=1, keepdims=True) + 1e-8)
     similarity_matrix = np.dot(emb1_norm, emb2_norm.T)  # [n1, n2]
 
-    # Apply softmax to get attention weights (temperature-scaled)
-    temperature = 0.1  # Lower = sharper attention
-    attention_weights = np.exp(similarity_matrix / temperature)
-    attention_weights = attention_weights / attention_weights.sum(axis=1, keepdims=True)
-
     # For each label in graph1, find its best alignment in graph2
     label_mapping_g1 = {}
     label_mapping_g2 = {}
@@ -247,14 +248,21 @@ def compute_soft_label_mapping(graph1_labels, graph2_labels, similarity_threshol
     graph1_labels_list = list(graph1_labels)
     graph2_labels_list = list(graph2_labels)
 
-    # Graph1 labels: map to their best-matching graph2 anchor
+    # Graph1 labels: map to their best-matching graph2 anchor only if similarity exceeds threshold
     for i, label in enumerate(graph1_labels_list):
-        best_match_idx = np.argmax(attention_weights[i])
-        label_mapping_g1[label] = f"anchor_{best_match_idx}"
+        best_match_idx = np.argmax(similarity_matrix[i])
+        best_match_similarity = similarity_matrix[i, best_match_idx]
+        
+        # Only create alignment if similarity exceeds threshold
+        if best_match_similarity >= similarity_threshold:
+            label_mapping_g1[label] = f"{prefix}_{best_match_idx}"
+        else:
+            # Keep original label if no good match found
+            label_mapping_g1[label] = label
 
     # Graph2 labels: each becomes its own anchor
     for j, label in enumerate(graph2_labels_list):
-        label_mapping_g2[label] = f"anchor_{j}"
+        label_mapping_g2[label] = f"{prefix}_{j}"
 
     return label_mapping_g1, label_mapping_g2
 
@@ -359,20 +367,41 @@ def calculate_attention_augmented_similarity(kg1_triples, kg2_triples, use_neura
     kg1_edge_labels = set(nx.get_edge_attributes(kg1_graph, 'relation').values())
     kg2_edge_labels = set(nx.get_edge_attributes(kg2_graph, 'relation').values())
 
-    all_kg1_labels = kg1_node_labels | kg1_edge_labels
-    all_kg2_labels = kg2_node_labels | kg2_edge_labels
-
     # Step 2: Attention-Based Label Alignment (replaces clustering)
+    # IMPORTANT: Align entities and relations separately to avoid mismatches
+
     if use_neural_attention:
         aligner = AttentionAligner(embedding_dim=768, hidden_dim=256)
-        label_mapping_g1, label_mapping_g2 = compute_attention_aligned_labels(
-            list(all_kg1_labels), list(all_kg2_labels), aligner
-        )
+
+        # Align entities (nodes) separately
+        entity_mapping_g1, entity_mapping_g2 = compute_attention_aligned_labels(
+            list(kg1_node_labels), list(kg2_node_labels), aligner
+        ) if kg1_node_labels and kg2_node_labels else ({}, {})
+
+        # Align relations (edges) separately
+        relation_mapping_g1, relation_mapping_g2 = compute_attention_aligned_labels(
+            list(kg1_edge_labels), list(kg2_edge_labels), aligner
+        ) if kg1_edge_labels and kg2_edge_labels else ({}, {})
+
+        # Combine mappings
+        label_mapping_g1 = {**entity_mapping_g1, **relation_mapping_g1}
+        label_mapping_g2 = {**entity_mapping_g2, **relation_mapping_g2}
     else:
         # Use softmax-based similarity (no learned parameters)
-        label_mapping_g1, label_mapping_g2 = compute_soft_label_mapping(
-            all_kg1_labels, all_kg2_labels
-        )
+
+        # Align entities (nodes) separately with "node" prefix
+        entity_mapping_g1, entity_mapping_g2 = compute_soft_label_mapping(
+            kg1_node_labels, kg2_node_labels, prefix="node"
+        ) if kg1_node_labels and kg2_node_labels else ({}, {})
+
+        # Align relations (edges) separately with "rel" prefix
+        relation_mapping_g1, relation_mapping_g2 = compute_soft_label_mapping(
+            kg1_edge_labels, kg2_edge_labels, prefix="rel"
+        ) if kg1_edge_labels and kg2_edge_labels else ({}, {})
+
+        # Combine mappings
+        label_mapping_g1 = {**entity_mapping_g1, **relation_mapping_g1}
+        label_mapping_g2 = {**entity_mapping_g2, **relation_mapping_g2}
 
     # Step 3: Relabel graphs with attention-derived labels
     relabeled_kg1 = relabel_graph_with_mapping(kg1_graph, label_mapping_g1)

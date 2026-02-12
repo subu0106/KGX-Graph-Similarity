@@ -161,10 +161,10 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='AA-KEA Similarity for Mamta Dataset')
     parser.add_argument('--input', type=str,
-                       default="mistralai_Mistral-7B-Instruct-v0.2_merged.csv",
+                       default="/Users/subu/Desktop/FYP/KGX-Graph-Similarity/edc_data/mistralai_Mistral-7B-Instruct-v0.2_stsb2_kgv.csv",
                        help='Input CSV file (default: merged file)')
     parser.add_argument('--output', type=str,
-                       default="aa_kea_results.csv",
+                       default="/Users/subu/Desktop/FYP/KGX-Graph-Similarity/results/edc_data/stsb2_aa_kea_results.csv",
                        help='Output CSV file')
     parser.add_argument('--limit', type=int, default=None,
                        help='Limit number of rows (for testing)')

@@ -1,4 +1,4 @@
-row_id,sentence1,sentence2,kg1,kg2
+row_id,question,sentence2,gold_kg,llm_kg
 0,A plane is taking off.,An air plane is taking off.,"[['plane', 'is_type_of', 'aircraft'], ['aircraft', 'is_type_of', 'vehicle'], ['aircraft', 'is_type_of', 'plane'], ['plane', 'is_involved_in', 'taking_off'], ['taking_off', 'is_type_of', 'event']]","[['air plane', 'is_type_of', 'aircraft'], ['aircraft', 'is_type_of', 'vehicle'], ['aircraft', 'is_type_of', 'plane'], ['air plane', 'is_involved_in', 'taking_off'], ['taking_off', 'is_type_of', 'event']]"
 1,A man is playing a large flute.,A man is playing a flute.,"[['a_man', 'plays', 'large_flute']]","[['a_man', 'plays', 'flute']]"
 2,A man is spreading shreded cheese on a pizza.,A man is spreading shredded cheese on an uncooked pizza.,"[['a_man', 'is_performing', 'spreading_cheese'], ['spreading_cheese', 'on', 'pizza'], ['pizza', 'is_a', 'food']]","[['a_man', 'is_performing', 'spreading_cheese'], ['spreading_cheese', 'on', 'uncooked_pizza'], ['uncooked_pizza', 'is_a', 'food']]"
