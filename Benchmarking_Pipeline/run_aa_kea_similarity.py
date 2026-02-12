@@ -12,7 +12,7 @@ import os
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from Attention_Augmented_KEA.attention_augmented_kea import calculate_aa_kea_similarity
+from Methods import calculate_aa_kea_similarity
 
 def process_mamta_dataset(input_file, output_file):
     """Process mamta dataset and calculate AA-KEA similarity"""
