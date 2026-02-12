@@ -19,7 +19,6 @@ import torch
 import torch.nn as nn
 import networkx as nx
 from sklearn.metrics.pairwise import cosine_similarity
-from KEA import calculate_similarity, calculate_composite_similarity
 from grakel import Graph
 from grakel.kernels import WeisfeilerLehman
 import os
@@ -27,15 +26,20 @@ import sys
 import gc
 from sentence_transformers import SentenceTransformer
 
-# Import Attention-Augmented KEA
-from Attention_Augmented_KEA.attention_augmented_kea import calculate_aa_kea_similarity
+# Import from Methods package
+from Methods import (
+    calculate_similarity,
+    calculate_composite_similarity,
+    calculate_aa_kea_similarity,
+    calculate_pure_wl_kernel_similarity,
+    GraphEmbeddingSimilarity
+)
 
 # Load the same SBERT model used in KEA for fair comparison
 sbert_model = SentenceTransformer('paraphrase-MPNet-base-v2')
 
 
-# TransE Model
-class TransE(nn.Module):
+def parse_triple(triple_str):
     def __init__(self, num_entities, num_relations, embedding_dim=50, margin=1.0):
         super(TransE, self).__init__()
         self.embedding_dim = embedding_dim
