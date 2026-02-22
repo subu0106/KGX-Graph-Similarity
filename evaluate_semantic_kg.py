@@ -13,8 +13,8 @@ import torch
 import matplotlib.pyplot as plt
 from scipy import stats
 
-INPUT_FILE  = "/Users/subu/Desktop/KGX-Graph-Similarity/data/semantic_kg_transformed.csv"
-OUTPUT_FILE = "/Users/subu/Desktop/KGX-Graph-Similarity/results/semantic_kg_eval/similarity_results.csv"
+INPUT_FILE  = "data/semantic_kg_transformed.csv"
+OUTPUT_FILE = "results/semantic_kg_eval/similarity_results.csv"
 
 METHODS = [
     'kea_similarity',
