@@ -12,6 +12,7 @@ docs/
 multi_method_similarity_results.csv
 # results/
 results/semantic_kg_eval/analysis
+paper/
 
 # Model files
 *.pt
