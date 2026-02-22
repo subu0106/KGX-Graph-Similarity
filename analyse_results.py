@@ -227,13 +227,13 @@ def plot_residual_analysis(res, out_dir):
         ax.legend(fontsize=7)
         ax.grid(True, linestyle='--', alpha=0.3)
         # annotate bias direction
-        bias_txt = 'overestimates' if res[m]['mean'] > 0.01 else \
-                   'underestimates' if res[m]['mean'] < -0.01 else 'unbiased'
-        ax.text(0.05, 0.92, bias_txt, transform=ax.transAxes, fontsize=8,
+        # bias_txt = 'overestimates' if res[m]['mean'] > 0.01 else \
+        #            'underestimates' if res[m]['mean'] < -0.01 else 'unbiased'
+        ax.text(0.05, 0.92, f"bias: {res[m]['mean']:.3f}", transform=ax.transAxes, fontsize=8,
                 color='darkred', fontweight='bold')
     for idx in range(len(methods), len(axes)):
         axes[idx].set_visible(False)
-    fig.suptitle('Residuals vs Ground Truth  (want: random scatter around 0)',
+    fig.suptitle('Residuals vs Ground Truth',
                  fontsize=12, fontweight='bold')
     plt.tight_layout()
     _save(fig, out_dir, 'residuals_vs_ground.png')
