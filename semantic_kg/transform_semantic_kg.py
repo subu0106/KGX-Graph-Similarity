@@ -32,9 +32,6 @@ def transform_semantic_kg(input_file, output_file):
     print(f"Reading {input_file}...")
     df = pd.read_csv(input_file)
 
-    print(f"Original shape: {df.shape}")
-    print(f"Columns: {df.columns.tolist()}")
-
     # Create new dataframe with desired columns
     new_df = pd.DataFrame()
 
@@ -68,10 +65,3 @@ if __name__ == "__main__":
 
     df = transform_semantic_kg(input_file, output_file)
 
-    # Show a sample of the first row to verify format
-    print("\n" + "="*80)
-    print("Sample of first row:")
-    print("="*80)
-    print(f"Graph 1: {df['graph_1'].iloc[0][:200]}...")
-    print(f"Graph 2: {df['graph_2'].iloc[0][:200]}...")
-    print(f"Similarity: {df['similarity_score_ground'].iloc[0]}")

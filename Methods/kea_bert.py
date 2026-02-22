@@ -53,9 +53,6 @@ def match_and_filter_triples(kg1_triples, kg2_triples):
     return picked_triples
 
 
-# =============================================================================
-# Attention-Based Alignment (from AA-KEA)
-# =============================================================================
 
 class AttentionAligner(nn.Module):
     """
@@ -619,7 +616,6 @@ def calculate_kea_bert_with_attention(kg1_triples, kg2_triples, use_neural_atten
     return detailed_metrics
 
 
-# Wrapper function for compatibility with multi_method_similarity.py
 def calculate_similarity(kg1_triples, kg2_triples):
     """Compatibility wrapper that returns just the F1 score"""
     return calculate_kea_bert_similarity(kg1_triples, kg2_triples, return_detailed=False)

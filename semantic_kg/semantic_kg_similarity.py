@@ -191,11 +191,6 @@ def process_semantic_kg_dataset(input_file, output_file):
 
             print("done")
 
-    print(f"\n{'='*60}")
-    print(f"Results written to: {output_file}")
-    print(f"Total rows processed: {total_rows}")
-    print(f"{'='*60}")
-
 
 if __name__ == "__main__":
     import argparse
@@ -217,9 +212,7 @@ if __name__ == "__main__":
     input_file = args.input
     output_file = args.output
 
-    print("="*60)
     print("Semantic KG Multi-Method Graph Similarity Comparison")
-    print("="*60)
     print(f"\nInput:  {input_file}")
     print(f"Output: {output_file}")
 
@@ -239,16 +232,6 @@ if __name__ == "__main__":
         temp_input.close()
         input_file = temp_input.name
 
-    print("\nMethods:")
-    print("1. KEA (Semantic Clustering + WL Kernel)")
-    print("2. KEA Composite (Gaussian + WL Kernel)")
-    print("3. KEA Semantic (Gaussian kernel only)")
-    print("4. TransE (Translation-based embedding)")
-    print("5. RotatE (Rotation-based embedding)")
-    print("6. Pure WL Kernel (Structural similarity only)")
-    print("7. AA-KEA (Attention-Augmented KEA)")
-    print("8. Direct SBERT (paraphrase-MPNet-base-v2)")
-    print()
 
     # Process dataset
     process_semantic_kg_dataset(input_file, output_file)
@@ -257,5 +240,5 @@ if __name__ == "__main__":
     if args.limit:
         os.remove(input_file)
 
-    print("\n✓ Processing complete!")
+    print("Processing complete.")
     print(f"Results saved to: {output_file}")

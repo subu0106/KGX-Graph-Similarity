@@ -50,7 +50,6 @@ CI_LEVEL    = 95
 ALPHA       = 0.05
 
 
-# ── data loading ───────────────────────────────────────────────────────────────
 
 def load(csv_path):
     df = pd.read_csv(csv_path)
@@ -64,9 +63,6 @@ def paired(df, m):
     return p['similarity_score_ground'].values, p[m].values
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# 1. CORE METRICS
-# ══════════════════════════════════════════════════════════════════════════════
 
 def compute_core_metrics(df):
     records = []
@@ -150,9 +146,6 @@ def plot_scatter_grid(df, out_dir):
     _save(fig, out_dir, 'scatter_plots.png')
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# 2. RESIDUAL ANALYSIS
-# ══════════════════════════════════════════════════════════════════════════════
 
 def compute_residuals(df):
     """residual = method_score - ground_truth"""
@@ -183,7 +176,6 @@ def plot_residual_analysis(res, out_dir):
     methods = list(res.keys())
     ncols, nrows = 3, -(-len(methods) // 3)
 
-    # — histogram grid —
     fig, axes = plt.subplots(nrows, ncols, figsize=(6 * ncols, 4 * nrows))
     axes = axes.flatten()
     for idx, m in enumerate(methods):
@@ -206,7 +198,6 @@ def plot_residual_analysis(res, out_dir):
     plt.tight_layout()
     _save(fig, out_dir, 'residual_histograms.png')
 
-    # — residuals vs ground truth grid —
     fig, axes = plt.subplots(nrows, ncols, figsize=(6 * ncols, 4 * nrows))
     axes = axes.flatten()
     for idx, m in enumerate(methods):
@@ -239,9 +230,6 @@ def plot_residual_analysis(res, out_dir):
     _save(fig, out_dir, 'residuals_vs_ground.png')
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# 3. CALIBRATION ANALYSIS
-# ══════════════════════════════════════════════════════════════════════════════
 
 def compute_calibration(df):
     cal = {}
@@ -314,9 +302,6 @@ def plot_calibration(cal, out_dir):
     _save(fig, out_dir, 'calibration.png')
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# 4. STATISTICAL SIGNIFICANCE TESTING vs BEST METHOD
-# ══════════════════════════════════════════════════════════════════════════════
 
 def fisher_rz_test(r1, r2, n):
     """
@@ -421,9 +406,6 @@ def significance_tests(df, metrics, out_dir):
     _save(fig, out_dir, 'significance_tests.png')
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# 5. BOOTSTRAP CONFIDENCE INTERVALS
-# ══════════════════════════════════════════════════════════════════════════════
 
 def bootstrap_ci(df, out_dir, n_boot=N_BOOTSTRAP, ci=CI_LEVEL):
     alpha = (100 - ci) / 2
@@ -496,9 +478,6 @@ def bootstrap_ci(df, out_dir, n_boot=N_BOOTSTRAP, ci=CI_LEVEL):
     _save(fig, out_dir, 'bootstrap_ci.png')
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# 6. VARIANCE / DISCRIMINATIVE POWER
-# ══════════════════════════════════════════════════════════════════════════════
 
 def variance_check(df, out_dir):
     print("=" * 55)
@@ -549,9 +528,6 @@ def variance_check(df, out_dir):
     _save(fig, out_dir, 'variance_check.png')
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# 7. FINAL RANKING TABLE
-# ══════════════════════════════════════════════════════════════════════════════
 
 def plot_ranking_table(metrics, out_dir):
     valid = metrics.dropna(subset=['pearson_r']).copy()
@@ -616,7 +592,6 @@ def plot_ranking_table(metrics, out_dir):
     print(f"  RMSE       = {best['rmse']:.4f}\n")
 
 
-# ── util ───────────────────────────────────────────────────────────────────────
 
 def _save(fig, out_dir, filename):
     path = os.path.join(out_dir, filename)
@@ -625,7 +600,6 @@ def _save(fig, out_dir, filename):
     print(f"  Saved: {path}")
 
 
-# ── main ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import argparse
@@ -640,37 +614,37 @@ if __name__ == "__main__":
     df = load(args.input)
 
     # 1. Core
-    print("── 1. CORE METRICS ──────────────────────────────────────")
+    print("1. Core metrics")
     metrics = compute_core_metrics(df)
     print_core_metrics(metrics)
     plot_scatter_grid(df, args.outdir)
 
     # 2. Residuals
-    print("── 2. RESIDUAL ANALYSIS ─────────────────────────────────")
+    print("2. Residual analysis")
     res = compute_residuals(df)
     print_residuals(res)
     plot_residual_analysis(res, args.outdir)
 
     # 3. Calibration
-    print("── 3. CALIBRATION ───────────────────────────────────────")
+    print("3. Calibration")
     cal = compute_calibration(df)
     print_calibration(cal)
     plot_calibration(cal, args.outdir)
 
     # 4. Significance tests
-    print("── 4. SIGNIFICANCE TESTS ────────────────────────────────")
+    print("4. Significance tests")
     significance_tests(df, metrics, args.outdir)
 
     # 5. Bootstrap CI
-    print("── 5. BOOTSTRAP CI ──────────────────────────────────────")
+    print("5. Bootstrap CI")
     bootstrap_ci(df, args.outdir)
 
     # 6. Variance
-    print("── 6. VARIANCE CHECK ────────────────────────────────────")
+    print("6. Variance check")
     variance_check(df, args.outdir)
 
     # 7. Ranking
-    print("── 7. FINAL RANKING ─────────────────────────────────────")
+    print("7. Final ranking")
     plot_ranking_table(metrics, args.outdir)
 
     print(f"\nAll outputs saved to: {args.outdir}")

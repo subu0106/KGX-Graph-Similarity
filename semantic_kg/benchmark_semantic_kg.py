@@ -92,9 +92,6 @@ def calculate_metrics(predicted, ground_truth, threshold=0.7):
 def benchmark_methods(results_file, output_dir):
     """Benchmark all methods and create visualizations"""
 
-    print("="*60)
-    print("BENCHMARKING SIMILARITY METHODS")
-    print("="*60)
     print(f"\nLoading results from: {results_file}")
 
     # Load data
@@ -123,7 +120,6 @@ def benchmark_methods(results_file, output_dir):
     # Calculate metrics for all methods
     results = {}
     print("\nCALCULATING METRICS (Threshold = 0.7 for AUC)")
-    print("-" * 60)
 
     for display_name, (method_key, color) in methods.items():
         metrics = calculate_metrics(data[method_key], ground_truth, threshold=0.7)
@@ -147,10 +143,7 @@ def benchmark_methods(results_file, output_dir):
     # Create output directory
     os.makedirs(output_dir, exist_ok=True)
 
-    # ===== VISUALIZATION 1: Scatter plots (predicted vs ground truth) =====
-    print("\n" + "="*60)
-    print("CREATING VISUALIZATIONS")
-    print("="*60)
+    print("\nCreating visualizations...")
 
     n_methods = len(results)
     n_cols = 3
@@ -195,10 +188,9 @@ def benchmark_methods(results_file, output_dir):
     plt.tight_layout()
     scatter_file = os.path.join(output_dir, 'scatter_plots_comparison.png')
     plt.savefig(scatter_file, dpi=300, bbox_inches='tight')
-    print(f"✓ Saved: {scatter_file}")
+    print(f"Saved: {scatter_file}")
     plt.close()
 
-    # ===== VISUALIZATION 2: Metrics comparison bar chart =====
     fig, axes = plt.subplots(2, 4, figsize=(24, 10))
 
     method_names = list(results.keys())
@@ -300,10 +292,9 @@ def benchmark_methods(results_file, output_dir):
     plt.tight_layout()
     metrics_file = os.path.join(output_dir, 'metrics_comparison.png')
     plt.savefig(metrics_file, dpi=300, bbox_inches='tight')
-    print(f"✓ Saved: {metrics_file}")
+    print(f"Saved: {metrics_file}")
     plt.close()
 
-    # ===== VISUALIZATION 3: Error distribution =====
     n_methods = len(results)
     n_cols = 3
     n_rows = (n_methods + n_cols - 1) // n_cols
@@ -335,10 +326,9 @@ def benchmark_methods(results_file, output_dir):
     plt.tight_layout()
     error_file = os.path.join(output_dir, 'error_distributions.png')
     plt.savefig(error_file, dpi=300, bbox_inches='tight')
-    print(f"✓ Saved: {error_file}")
+    print(f"Saved: {error_file}")
     plt.close()
 
-    # ===== VISUALIZATION 4: ROC Curves =====
     print("\nGenerating ROC curves...")
 
     # Individual ROC curves
@@ -401,7 +391,7 @@ def benchmark_methods(results_file, output_dir):
     plt.tight_layout()
     roc_individual_file = os.path.join(output_dir, 'roc_curves_individual.png')
     plt.savefig(roc_individual_file, dpi=300, bbox_inches='tight')
-    print(f"✓ Saved: {roc_individual_file}")
+    print(f"Saved: {roc_individual_file}")
     plt.close()
 
     # Combined ROC curve comparison
@@ -439,11 +429,10 @@ def benchmark_methods(results_file, output_dir):
     plt.tight_layout()
     roc_comparison_file = os.path.join(output_dir, 'roc_curves_comparison.png')
     plt.savefig(roc_comparison_file, dpi=300, bbox_inches='tight')
-    print(f"✓ Saved: {roc_comparison_file}")
+    print(f"Saved: {roc_comparison_file}")
     plt.close()
 
 
-    # ===== SUMMARY REPORT =====
     summary_file = os.path.join(output_dir, 'benchmark_summary.txt')
     with open(summary_file, 'w') as f:
         f.write("="*80 + "\n")
@@ -489,11 +478,8 @@ def benchmark_methods(results_file, output_dir):
         f.write("- Avg Precision: Precision-Recall curve summary (1 = perfect)\n")
         f.write("- Composite Score: Normalized average of all metrics (1 = best)\n")
 
-    print(f"✓ Saved: {summary_file}")
+    print(f"Saved: {summary_file}")
 
-    print("\n" + "="*60)
-    print("BENCHMARK COMPLETE!")
-    print("="*60)
     print(f"\nResults saved to: {output_dir}")
     print("\nBest method (by composite score):")
     best_method, best_score = ranked[0]

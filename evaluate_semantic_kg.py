@@ -252,9 +252,7 @@ def report_correlations(results, output_file):
     rows = _collect_correlations(results)
 
     col_w = 38
-    print(f"\n{'='*70}")
-    print("CORRELATION WITH GROUND TRUTH")
-    print(f"{'='*70}")
+    print("\nCorrelation with ground truth:")
     print(f"{'Method':<{col_w}}  {'Pearson r':>10}  {'p-value':>10}  "
           f"{'Spearman r':>11}  {'p-value':>10}  {'N':>5}")
     print(f"{'-'*70}")
@@ -265,7 +263,6 @@ def report_correlations(results, output_file):
         else:
             print(f"{r['method']:<{col_w}}  {r['pearson_r']:>10.4f}  {r['pearson_p']:>10.4e}"
                   f"  {r['spearman_r']:>11.4f}  {r['spearman_p']:>10.4e}  {r['n']:>5}")
-    print(f"{'='*70}\n")
 
     headers   = ['Method', 'Pearson r', 'Pearson p', 'Spearman r', 'Spearman p', 'N']
     cell_data = []
@@ -325,9 +322,7 @@ if __name__ == "__main__":
                         help=f'Rows per batch (default: {DEFAULT_BATCH_SIZE})')
     args = parser.parse_args()
 
-    print("=" * 60)
     print("Semantic KG Similarity Evaluation")
-    print("=" * 60)
     print(f"Input:   {args.input}")
     print(f"Output:  {args.output}")
     print(f"Workers: {args.workers}  |  Batch size: {args.batch_size}")

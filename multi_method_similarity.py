@@ -168,10 +168,8 @@ def process_dataset(input_file, output_file):
 
             print("done")
 
-    print(f"\n{'='*60}")
     print(f"Results written to: {output_file}")
     print(f"Total rows processed: {len(results)}")
-    print(f"{'='*60}")
 
     return results
 
@@ -196,10 +194,8 @@ def plot_individual_method_results(results, output_file_base):
         'KEA-BERT (BERTScore Semantic)': ('kea_bert_similarity', '#E67E22'),
     }
 
-    print("\n" + "="*60)
     print("Generating individual plots for each method...")
     print(f"Saving plots to: {plots_dir}")
-    print("="*60)
 
     for method_name, (col_name, color) in methods.items():
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
@@ -295,9 +291,7 @@ def plot_individual_method_results(results, output_file_base):
     print(f"  Saved: {os.path.basename(comparison_file)}")
     plt.close()
 
-    print("\n" + "="*60)
     print("SUMMARY STATISTICS")
-    print("="*60)
 
     for method_name, (col_name, _) in methods.items():
         scores = plot_df[col_name] * 100
@@ -311,8 +305,6 @@ def plot_individual_method_results(results, output_file_base):
         print(f"  Min:      {scores.min():.2f}%")
         print(f"  Perfect (>=1.0): {perfect}/{len(plot_df)} ({perfect/len(plot_df)*100:.1f}%)")
         print(f"  High (>=0.8):    {high}/{len(plot_df)} ({high/len(plot_df)*100:.1f}%)")
-
-    print("\n" + "="*60)
 
 
 if __name__ == "__main__":
@@ -334,9 +326,7 @@ if __name__ == "__main__":
 
     os.makedirs(os.path.dirname(args.output), exist_ok=True)
 
-    print("="*60)
     print("Multi-Method Graph Similarity Comparison")
-    print("="*60)
 
     if args.limit:
         print(f"\n*** LIMITING TO {args.limit} ROWS (for testing) ***\n")
@@ -347,7 +337,6 @@ if __name__ == "__main__":
 
     if args.limit:
         all_rows = all_rows[:args.limit]
-        print(f"Processing {len(all_rows)} rows (limited from original dataset)\n")
 
     input_file = args.input
     if args.limit:

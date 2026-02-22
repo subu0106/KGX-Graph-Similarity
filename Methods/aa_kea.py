@@ -41,9 +41,6 @@ def get_batch_embeddings(labels):
     return embeddings.detach().cpu().numpy()
 
 
-# =============================================================================
-# STEP 1: Semantic Triple Matching (kept from KEA)
-# =============================================================================
 
 def cosine_sim(emb1, emb2):
     """Compute cosine similarity between two embeddings"""
@@ -76,9 +73,6 @@ def match_and_filter_triples(kg1_triples, kg2_triples):
     return picked_triples
 
 
-# =============================================================================
-# STEP 2: GAP-Style Attention Alignment (replaces semantic clustering)
-# =============================================================================
 
 class AttentionAligner(nn.Module):
     """
@@ -267,9 +261,6 @@ def compute_soft_label_mapping(graph1_labels, graph2_labels, similarity_threshol
     return label_mapping_g1, label_mapping_g2
 
 
-# =============================================================================
-# STEP 3: Graph Construction and WL Kernel (adapted from KEA)
-# =============================================================================
 
 def create_networkx_graph(triple_list):
     """Create NetworkX graph from triples"""
@@ -321,9 +312,6 @@ def convert_to_grakel_graph(nx_graph):
     return Graph(edges, node_labels=node_labels, edge_labels=edge_labels)
 
 
-# =============================================================================
-# MAIN SIMILARITY FUNCTION
-# =============================================================================
 
 def calculate_attention_augmented_similarity(kg1_triples, kg2_triples, use_neural_attention=False):
     """
@@ -435,9 +423,6 @@ def calculate_attention_augmented_similarity(kg1_triples, kg2_triples, use_neura
     return similarity, debug_info
 
 
-# =============================================================================
-# ENHANCED VERSION: Neighborhood-Aware Attention (NOT USED IN PROGRESS EVALUATION)
-# =============================================================================
 
 # def get_node_neighborhood_embedding(graph, node, hop=1):
 #     """
@@ -549,9 +534,6 @@ def calculate_attention_augmented_similarity(kg1_triples, kg2_triples, use_neura
 #     }
 
 
-# =============================================================================
-# WRAPPER FOR COMPARISON SCRIPT
-# =============================================================================
 
 def calculate_aa_kea_similarity(kg1_triples, kg2_triples):
     """
@@ -570,9 +552,6 @@ def calculate_aa_kea_similarity(kg1_triples, kg2_triples):
 #     return similarity
 
 
-# =============================================================================
-# TEST
-# =============================================================================
 
 if __name__ == "__main__":
     print("=" * 60)
