@@ -23,13 +23,13 @@ from grakel import Graph
 from grakel.kernels import WeisfeilerLehman
 from sentence_transformers import SentenceTransformer
 
-# Load SBERT model once (shared with KEA for fair comparison)
-sbert_model = SentenceTransformer('paraphrase-MPNet-base-v2')
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+sbert_model = SentenceTransformer('paraphrase-MPNet-base-v2', device=DEVICE)
 
 
 def get_sbert_embedding(label):
     """Get SBERT embedding for a label"""
-    embedding = sbert_model.encode(label, convert_to_tensor=True)
+    embedding = sbert_model.encode(label, convert_to_tensor=True, device=DEVICE)
     return embedding.detach().cpu().numpy()
 
 
@@ -37,7 +37,7 @@ def get_batch_embeddings(labels):
     """Get SBERT embeddings for multiple labels efficiently"""
     if not labels:
         return np.array([])
-    embeddings = sbert_model.encode(labels, convert_to_tensor=True)
+    embeddings = sbert_model.encode(labels, convert_to_tensor=True, device=DEVICE)
     return embeddings.detach().cpu().numpy()
 
 

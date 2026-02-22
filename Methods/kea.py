@@ -3,14 +3,16 @@ import numpy as np
 from grakel import Graph
 from grakel.kernels import WeisfeilerLehman, NeighborhoodSubgraphPairwiseDistance
 from sklearn.metrics.pairwise import cosine_similarity
+import torch
 from sentence_transformers import SentenceTransformer
 from sklearn.cluster import KMeans
 from sklearn.cluster import AgglomerativeClustering
 
-sbert_model = SentenceTransformer('paraphrase-MPNet-base-v2')
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+sbert_model = SentenceTransformer('paraphrase-MPNet-base-v2', device=DEVICE)
 
 def get_sbert_embedding(label):
-    embedding = sbert_model.encode(label, convert_to_tensor=True)
+    embedding = sbert_model.encode(label, convert_to_tensor=True, device=DEVICE)
     return embedding.detach().cpu().numpy()
 
 def choose_representative(cluster):
