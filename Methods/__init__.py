@@ -15,6 +15,7 @@ from .aa_kea import (
     calculate_aa_kea_similarity,
     calculate_attention_augmented_similarity
 )
+from .kea_bert import calculate_kea_bert_similarity
 
 __all__ = [
     'TransE',
@@ -26,4 +27,5 @@ __all__ = [
     'calculate_gaussian_feature_similarity',
     'calculate_aa_kea_similarity',
     'calculate_attention_augmented_similarity',
+    'calculate_kea_bert_similarity',
 ]
