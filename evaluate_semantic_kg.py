@@ -3,14 +3,21 @@
 Evaluate graph similarity methods on semantic_kg_transformed dataset.
 Computes similarity scores for each method and reports correlation
 (Pearson + Spearman) against the ground truth similarity score.
+
+Parallel processing notes:
+  - Uses ProcessPoolExecutor with spawn start method (required for CUDA on Linux)
+  - Each worker loads SBERT once into its own GPU context, then handles its batch
+  - Methods are imported lazily inside the worker to avoid fork+CUDA deadlocks
 """
 
 import csv
 import ast
 import os
 import gc
+import math
 import torch
 import matplotlib.pyplot as plt
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from scipy import stats
 
 INPUT_FILE  = "data/semantic_kg_transformed.csv"
@@ -25,13 +32,14 @@ METHODS = [
     'kea_bert_similarity',
 ]
 
-FIELDNAMES = ['graph_1', 'graph_2', 'similarity_score_ground'] + METHODS
+FIELDNAMES  = ['graph_1', 'graph_2', 'similarity_score_ground'] + METHODS
+DEFAULT_WORKERS    = 8
+DEFAULT_BATCH_SIZE = 50
 
 
 # ── helpers ────────────────────────────────────────────────────────────────────
 
 def parse_triple(triple_str):
-    """Parse string representation of triples into a list of triples."""
     try:
         parsed = ast.literal_eval(triple_str)
         if isinstance(parsed, list) and len(parsed) > 0:
@@ -45,18 +53,21 @@ def parse_triple(triple_str):
         return []
 
 
-from Methods import (
-    calculate_similarity,
-    calculate_composite_similarity,
-    calculate_aa_kea_similarity,
-    calculate_pure_wl_kernel_similarity,
-    GraphEmbeddingSimilarity,
-    calculate_kea_bert_similarity,
-)
-
-
 def compute_row(triples1, triples2):
-    """Run all methods on a pair of triple lists. Returns a dict of scores."""
+    """
+    Run all methods on a pair of triple lists.
+    Imports are inside this function so each spawned worker process loads
+    the SBERT model once (cached by Python's module system) into its own
+    CUDA context, avoiding fork+CUDA deadlocks.
+    """
+    from Methods import (
+        calculate_similarity,
+        calculate_composite_similarity,
+        calculate_aa_kea_similarity,
+        calculate_pure_wl_kernel_similarity,
+        GraphEmbeddingSimilarity,
+        calculate_kea_bert_similarity,
+    )
 
     scores = {m: None for m in METHODS}
     embedding_calculator = GraphEmbeddingSimilarity(embedding_dim=50)
@@ -104,9 +115,44 @@ def compute_row(triples1, triples2):
     return scores
 
 
+# ── worker (top-level required for ProcessPoolExecutor pickling) ───────────────
+
+def _process_batch(batch_data):
+    """
+    Worker: receives list of (graph_1, graph_2, ground) tuples.
+    SBERT loads on first compute_row() call, then stays cached for the batch.
+    """
+    results = []
+    for graph_1, graph_2, ground in batch_data:
+        triples1 = parse_triple(graph_1)
+        triples2 = parse_triple(graph_2)
+
+        result = {
+            'graph_1': graph_1,
+            'graph_2': graph_2,
+            'similarity_score_ground': ground,
+        }
+
+        if not triples1 or not triples2:
+            result.update({m: None for m in METHODS})
+        else:
+            result.update(compute_row(triples1, triples2))
+
+        results.append(result)
+        gc.collect()
+
+    return results
+
+
 # ── processing ─────────────────────────────────────────────────────────────────
 
-def process(input_file, output_file, limit=None):
+def _chunk(lst, size):
+    for i in range(0, len(lst), size):
+        yield lst[i:i + size]
+
+
+def process(input_file, output_file, limit=None,
+            workers=DEFAULT_WORKERS, batch_size=DEFAULT_BATCH_SIZE):
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
     with open(input_file, 'r', encoding='utf-8') as f:
@@ -115,48 +161,63 @@ def process(input_file, output_file, limit=None):
     if limit:
         rows = rows[:limit]
 
-    total = len(rows)
-    results = []
+    total     = len(rows)
+    n_batches = math.ceil(total / batch_size)
+
+    print(f"Rows: {total}  |  Workers: {workers}  |  "
+          f"Batch size: {batch_size}  |  Batches: {n_batches}")
+
+    batches = [
+        [(r['graph_1'], r['graph_2'], r['similarity_score_ground']) for r in chunk]
+        for chunk in _chunk(rows, batch_size)
+    ]
+
+    all_results = []
+    completed   = 0
 
     with open(output_file, 'w', encoding='utf-8', newline='') as out_f:
         writer = csv.DictWriter(out_f, fieldnames=FIELDNAMES)
         writer.writeheader()
 
-        for i, row in enumerate(rows):
-            print(f"Processing row {i+1}/{total}...", end=" ", flush=True)
-
-            triples1 = parse_triple(row['graph_1'])
-            triples2 = parse_triple(row['graph_2'])
-
-            result = {
-                'graph_1': row['graph_1'],
-                'graph_2': row['graph_2'],
-                'similarity_score_ground': row['similarity_score_ground'],
+        with ProcessPoolExecutor(max_workers=workers) as executor:
+            future_to_idx = {
+                executor.submit(_process_batch, batch): idx
+                for idx, batch in enumerate(batches)
             }
 
-            if not triples1 or not triples2:
-                print("skipped (empty triples)")
-                result.update({m: None for m in METHODS})
-            else:
-                result.update(compute_row(triples1, triples2))
-                print("done")
+            ordered = [None] * n_batches
+            for future in as_completed(future_to_idx):
+                idx = future_to_idx[future]
+                try:
+                    ordered[idx] = future.result()
+                except Exception as e:
+                    print(f"\nBatch {idx} failed: {e}")
+                    ordered[idx] = []
 
-            writer.writerow(result)
-            out_f.flush()
-            results.append(result)
+                completed += 1
+                done_rows = sum(len(b) for b in ordered if b is not None)
+                print(f"  Batches done: {completed}/{n_batches}  "
+                      f"({done_rows}/{total} rows)", flush=True)
 
-            gc.collect()
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
+        # Write in original row order
+        for batch_results in ordered:
+            if batch_results:
+                for result in batch_results:
+                    writer.writerow(result)
+                    all_results.append(result)
+                out_f.flush()
 
-    return results
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+    return all_results
 
 
 # ── correlation reporting ──────────────────────────────────────────────────────
 
 def _collect_correlations(results):
-    method_scores      = {m: [] for m in METHODS}
-    ground_per_method  = {m: [] for m in METHODS}
+    method_scores     = {m: [] for m in METHODS}
+    ground_per_method = {m: [] for m in METHODS}
 
     for r in results:
         try:
@@ -188,7 +249,6 @@ def _collect_correlations(results):
 
 
 def report_correlations(results, output_file):
-    """Print correlation table and save it as a PNG next to the output CSV."""
     rows = _collect_correlations(results)
 
     col_w = 38
@@ -252,21 +312,38 @@ def report_correlations(results, output_file):
 
 if __name__ == "__main__":
     import argparse
+    import multiprocessing
+    multiprocessing.set_start_method('spawn', force=True)  # required for CUDA + multiprocessing
 
     parser = argparse.ArgumentParser(description='Evaluate similarity methods on semantic KG dataset')
     parser.add_argument('--input',      type=str, default=INPUT_FILE)
     parser.add_argument('--output',     type=str, default=OUTPUT_FILE)
-    parser.add_argument('--limit', type=int, default=None,
+    parser.add_argument('--limit',      type=int, default=None,
                         help='Limit rows (for testing)')
+    parser.add_argument('--workers',    type=int, default=DEFAULT_WORKERS,
+                        help=f'Worker processes (default: {DEFAULT_WORKERS})')
+    parser.add_argument('--batch-size', type=int, default=DEFAULT_BATCH_SIZE,
+                        help=f'Rows per batch (default: {DEFAULT_BATCH_SIZE})')
     args = parser.parse_args()
 
     print("=" * 60)
     print("Semantic KG Similarity Evaluation")
     print("=" * 60)
-    print(f"Input:  {args.input}")
-    print(f"Output: {args.output}\n")
+    print(f"Input:   {args.input}")
+    print(f"Output:  {args.output}")
+    print(f"Workers: {args.workers}  |  Batch size: {args.batch_size}")
+    if torch.cuda.is_available():
+        print(f"GPU:     {torch.cuda.get_device_name(0)}")
+    else:
+        print("GPU:     not available, using CPU")
+    print()
 
-    results = process(args.input, args.output, limit=args.limit)
+    results = process(
+        args.input, args.output,
+        limit=args.limit,
+        workers=args.workers,
+        batch_size=args.batch_size,
+    )
 
     print(f"\nResults written to: {args.output}")
     print(f"Total rows processed: {len(results)}")
