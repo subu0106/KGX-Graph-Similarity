@@ -18,16 +18,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import stats
 
-RESULTS_CSV = "/Users/subu/Desktop/KGX-Graph-Similarity/results/semantic_kg_eval/similarity_results.csv"
-OUT_DIR     = "/Users/subu/Desktop/KGX-Graph-Similarity/results/semantic_kg_eval/analysis"
+RESULTS_CSV = "results/semantic_kg_eval/similarity_results.csv"
+OUT_DIR     = "results/semantic_kg_eval/final_analysis"
 
 METHODS = [
     'kea_similarity',
-    'kea_composite',
-    'kea_structural',
-    'kea_semantic',
+    # 'kea_composite',
+    # 'kea_structural',
+    # 'kea_semantic',
     'transe_similarity',
-    'rotate_similarity',
+    # 'rotate_similarity',
     'wl_kernel_similarity',
     'aa_kea_similarity',
     'kea_bert_similarity',
@@ -307,8 +307,8 @@ def plot_calibration(cal, out_dir):
     for idx in range(len(methods), len(axes)):
         axes[idx].set_visible(False)
 
-    fig.suptitle('Calibration: Predicted vs Ground Truth\n'
-                 'Red dashed = ideal; Black = actual fit',
+    fig.suptitle('Calibration: Predicted vs Ground Truth',
+                 
                  fontsize=12, fontweight='bold')
     plt.tight_layout()
     _save(fig, out_dir, 'calibration.png')
@@ -555,16 +555,9 @@ def variance_check(df, out_dir):
 
 def plot_ranking_table(metrics, out_dir):
     valid = metrics.dropna(subset=['pearson_r']).copy()
+    valid = valid.sort_values('pearson_r', ascending=False)
 
-    valid['rank_pearson']  = valid['pearson_r'].rank(ascending=False).astype(int)
-    valid['rank_spearman'] = valid['spearman_r'].rank(ascending=False).astype(int)
-    valid['rank_mae']      = valid['mae'].rank(ascending=True).astype(int)
-    valid['rank_rmse']     = valid['rmse'].rank(ascending=True).astype(int)
-    valid['avg_rank']      = (valid['rank_pearson'] + valid['rank_spearman'] +
-                              valid['rank_mae']     + valid['rank_rmse']) / 4
-    valid = valid.sort_values('avg_rank')
-
-    headers   = ['Method', 'Pearson r', 'Spearman r', 'MAE', 'RMSE', 'Significant', 'Avg Rank']
+    headers   = ['Method', 'Pearson r', 'Spearman r', 'MAE', 'RMSE']
     cell_data = []
     for _, row in valid.iterrows():
         cell_data.append([
@@ -573,49 +566,54 @@ def plot_ranking_table(metrics, out_dir):
             f"{row['spearman_r']:.4f}",
             f"{row['mae']:.4f}",
             f"{row['rmse']:.4f}",
-            'YES' if row['significant'] else 'no',
-            f"{row['avg_rank']:.2f}",
         ])
 
+    # Find row index of max per numeric column (best = max pearson/spearman, min mae/rmse)
+    best_col = {
+        1: valid['pearson_r'].idxmax(),
+        2: valid['spearman_r'].idxmax(),
+        3: valid['mae'].idxmin(),
+        4: valid['rmse'].idxmin(),
+    }
+    # Map pandas index → table row index (1-based, row 0 is header)
+    idx_to_row = {idx: ri + 1 for ri, idx in enumerate(valid.index)}
+
     nr = len(cell_data)
-    fig, ax = plt.subplots(figsize=(14, 0.55 * nr + 1.8))
+    fig, ax = plt.subplots(figsize=(12, 0.55 * nr + 1.8))
     ax.axis('off')
     tbl = ax.table(cellText=cell_data, colLabels=headers,
                    cellLoc='center', loc='center')
     tbl.auto_set_font_size(False)
-    tbl.set_fontsize(9)
+    tbl.set_fontsize(10)
     tbl.auto_set_column_width(col=list(range(len(headers))))
 
+    # Header style
     for col in range(len(headers)):
         tbl[0, col].set_facecolor('#2E86AB')
         tbl[0, col].set_text_props(color='white', fontweight='bold')
 
-    # gold = best
-    for col in range(len(headers)):
-        tbl[1, col].set_facecolor('#FFD700')
-        tbl[1, col].set_text_props(fontweight='bold')
-
-    for ri in range(2, nr + 1):
-        # grey out non-significant rows
-        row_method = valid.iloc[ri - 1]['method']
-        is_sig     = valid.iloc[ri - 1]['significant']
+    # Alternating row background
+    for ri in range(1, nr + 1):
         bg = '#f0f4f8' if ri % 2 == 0 else 'white'
         for col in range(len(headers)):
-            tbl[ri, col].set_facecolor(bg if is_sig else '#ffe0e0')
+            tbl[ri, col].set_facecolor(bg)
 
-    plt.title('Final Ranking  (Gold = Best | Red tint = not significant at p < 0.05)',
+    # Bold the best value per column
+    for col, best_idx in best_col.items():
+        ri = idx_to_row[best_idx]
+        tbl[ri, col].set_text_props(fontweight='bold')
+
+    plt.title('Method Comparison  (Bold = Best value per metric)',
               fontsize=11, fontweight='bold', pad=12)
     plt.tight_layout()
     _save(fig, out_dir, 'ranking_table.png')
 
     best = valid.iloc[0]
-    print(f"\nBEST METHOD: {best['method']}")
+    print(f"\nBEST METHOD (by Pearson r): {best['method']}")
     print(f"  Pearson r  = {best['pearson_r']:.4f}")
     print(f"  Spearman r = {best['spearman_r']:.4f}")
     print(f"  MAE        = {best['mae']:.4f}")
-    print(f"  RMSE       = {best['rmse']:.4f}")
-    print(f"  Significant= {'YES' if best['significant'] else 'no'}")
-    print(f"  Avg Rank   = {best['avg_rank']:.2f}\n")
+    print(f"  RMSE       = {best['rmse']:.4f}\n")
 
 
 # ── util ───────────────────────────────────────────────────────────────────────

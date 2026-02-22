@@ -308,7 +308,6 @@ def report_correlations(results, output_file):
     print(f"Correlation table saved to: {img_path}")
 
 
-# ── main ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import argparse
