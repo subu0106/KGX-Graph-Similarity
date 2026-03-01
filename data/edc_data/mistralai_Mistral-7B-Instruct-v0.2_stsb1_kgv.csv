@@ -1,0 +1,119 @@
+row_id,sentence1,sentence2,kg1,kg2
+0,A plane is taking off.,An air plane is taking off.,"[['A_plane', 'action', 'taking_off']]","[['An_airplane', 'action', 'taking_off']]"
+1,A man is playing a large flute.,A man is playing a flute.,"[['Man', 'plays', 'Large_flute']]","[['Man', 'plays', 'Flute']]"
+2,A man is spreading shreded cheese on a pizza.,A man is spreading shredded cheese on an uncooked pizza.,"[['man', 'action','spreading_shredded_cheese'], ['pizza', 'topping','shredded_cheese']]","[['man', 'action','spreading_shredded_cheese'], ['man', 'on', 'uncooked_pizza'], ['uncooked_pizza', 'foodType', 'pizza']]"
+3,Three men are playing chess.,Two men are playing chess.,"[['Three_men', 'activity', 'playing_chess'], ['Three_men', 'type', 'Men'], ['Chess', 'gameType', 'Chess']]","[['Two_men', 'activity', 'playing_chess']]"
+4,A man is playing the cello.,A man seated is playing the cello.,"[['Man', 'plays', 'Cello']]","[['Man', 'isSeated', True], ['Man', 'plays', 'Cello']]"
+5,Some men are fighting.,Two men are fighting.,[],[]
+6,A man is smoking.,A man is skating.,"[['Man', 'isSmoking', '_']]","[['Man', 'activity','skating']]"
+7,The man is playing the piano.,The man is playing the guitar.,"[['man', 'plays', 'piano']]","[['man', 'plays', 'guitar']]"
+8,A man is playing on a guitar and singing.,A woman is playing an acoustic guitar and singing.,"[['Man', 'plays', 'Guitar'], ['Man','singing']]","[['woman', 'plays', 'acoustic_guitar'], ['woman','singing']]"
+9,A person is throwing a cat on to the ceiling.,A person throws a cat on the ceiling.,"[['Person', 'action', 'Throw'], ['Person', 'objectThrown', 'Cat'], ['Cat', 'location', 'Ceiling']]","[['Person', 'action', 'Throw'], ['Person', 'objectThrown', 'Cat'], ['Cat', 'location', 'Ceiling']]"
+10,The man hit the other man with a stick.,The man spanked the other man with a stick.,"[['Man1', 'hit', 'Man2']]","[['Man1', 'acts', 'Man2'], ['Man1', 'uses', 'Stick']]
+
+Where Man1 and Man2 represent different entities, and 'Man1' is the subject of the action."
+11,A woman picks up and holds a baby kangaroo.,A woman picks up and holds a baby kangaroo in her arms.,"[['woman', 'action', 'picks\_up'], ['woman', 'holds', 'baby\_kangaroo'], ['baby\_kangaroo', 'type', 'Kangaroo']]","[['woman', 'holds', 'baby_kangaroo']]"
+12,A man is playing a flute.,A man is playing a bamboo flute.,"[['Man', 'plays', 'Flute']]","[['Man', 'plays', 'Bamboo_flute']]"
+13,A person is folding a piece of paper.,Someone is folding a piece of paper.,"[['A_person', 'action', 'folding'], ['A_person', 'object', 'piece_of_paper']]",[]
+14,A man is running on the road.,A panda dog is running on the road.,"[['A_man', 'isRunningOn', 'road']]","[['panda_dog', 'isTypeOf', 'panda_dog'], ['panda_dog', 'isRunningOn', 'road']]"
+15,A dog is trying to get bacon off his back.,A dog is trying to eat the bacon on its back.,"[['dog', 'tryingToDo', 'getBaconOffBack']]","[['A_dog', 'action', 'trying_to_eat'], ['A_dog', 'food', 'bacon']]"
+16,The polar bear is sliding on the snow.,A polar bear is sliding across the snow.,"[['Polar_bear', 'action','sliding'], ['Polar_bear', 'location','snow']]","[['Polar_bear', 'action','sliding']]"
+17,A woman is writing.,A woman is swimming.,"[['A_woman', 'isWriting', '_']]","[[' Woman', 'activity','swimming']]"
+18,A cat is rubbing against baby's face.,A cat is rubbing against a baby.,"[['cat', 'behavior', 'rubbing'], ['baby', 'age', 'infant']]
+['cat', 'affectionateTowards', 'baby']","[['cat', 'behavior', 'rubbing'], ['baby', 'age', 'infant']]
+
+[['cat', 'interactsWith', 'baby']]"
+19,The man is riding a horse.,A man is riding on a horse.,"[['man', 'riding', 'horse']]","[['Man', 'ridingOn', 'Horse']]"
+20,A man pours oil into a pot.,A man pours wine in a pot.,"[['Man', 'action', 'pour'], ['Man', 'liquid', 'oil'], ['Pot', 'content', 'oil']]","[['Man', 'action', 'pour_wine'], ['Man', 'object', 'wine'], ['wine', 'container', 'pot']]"
+21,A man is playing a guitar.,A girl is playing a guitar.,"[['Man', 'plays', 'Guitar']]","[['girl', 'plays', 'guitar']]"
+22,A panda is sliding down a slide.,A panda slides down a slide.,"[['Panda', 'action','sliding'], ['Panda', 'object','slide']]","[['Panda', 'action','slides_down']]"
+23,A woman is eating something.,A woman is eating meat.,"[['A_woman', 'isEating', '_']]","[[' Woman', 'isEating', 'Meat']]"
+24,A woman peels a potato.,A woman is peeling a potato.,"[['A_woman', 'action', 'peel'], ['Potato', 'isTypeOf', 'Food']]","[['A_woman', 'action', 'peel_potato']]"
+25,The boy fell off his bike.,A boy falls off his bike.,"[['boy', 'fell_off', 'bike']]","[['Boy', 'falls_off', 'Bike']]"
+26,The woman is playing the flute.,A woman is playing a flute.,"[['woman', 'plays', 'flute']]","[[' Woman', 'plays', 'Flute']]"
+27,A rabbit is running from an eagle.,A hare is running from a eagle.,"[['Rabbit', 'isRunningFrom', 'Eagle']]","[['hare', 'isRunningFrom', 'eagle']]"
+28,The woman is frying a breaded pork chop.,A woman is cooking a breaded pork chop.,"[['woman', 'action', 'fry'], ['woman', 'food', 'breaded_pork_chop']]","[['woman', 'cooking', 'breaded_pork_chop']]"
+29,A girl is flying a kite.,A girl running is flying a kite.,"[['Girl', 'activity', 'Flying_a_kite']]","[['Girl', 'isRunning', True], ['Girl', 'isFlying', 'Kite']]"
+30,A man is riding a mechanical bull.,A man rode a mechanical bull.,"[['Man', 'riding', 'Mechanical_bull']]","[['A_man', 'rode','mechanical_bull']]"
+31,The man is playing the guitar.,A man is playing a guitar.,"[['man', 'plays', 'guitar']]","[['Man', 'plays', 'Guitar']]"
+32,A woman is dancing and singing with other women.,A woman is dancing and singing in the rain.,"[['Woman', 'activity', 'dancing'], ['Woman', 'activity','singing'], ['Woman','relationship', 'other_women']]","[['Woman', 'activity', 'dancing_and_singing'], ['Woman', 'location', 'rain']]"
+33,A man is slicing a bun.,A man is slicing an onion.,"[['Man', 'action','slice'], ['Man', 'object', 'bun']]","[['A_man', 'action','slicing'], ['Onion', 'isBeingCutBy', 'A_man']]"
+34,A man is pouring oil into a pan.,A man is pouring oil into a skillet.,"[['Man', 'action', 'pouring_oil'], ['Man', 'object', 'oil'], ['oil', 'container', 'pan']]","[['Man', 'action', 'pouring_oil'], ['Man', 'object','skillet'], ['skillet', 'content', 'oil']]"
+35,A lion is playing with people.,A lion is playing with two men.,"[['Lion', 'interactsWith', 'People']]","[['A_lion', 'interactsWith', ['Man', 'Man']]]"
+36,A dog rides a skateboard.,A dog is riding a skateboard.,"[['A\_dog', 'rides','skateboard']]","[['A_dog', 'riding','skateboard']]"
+37,Someone is carving a statue.,A man is carving a statue.,"[['Someone', 'isCarving', 'Statue']]","[['Man', 'activity', 'carve'], ['Man', 'entityType', 'Person'], ['Man', 'isPerforming', 'carving_statue']]
+['carving_statue', 'type','statue']
+
+Or, if we assume the text is about a specific man carving a specific statue:
+
+[['Man_X', 'activity', 'carve'], ['Man_X', 'entityType', 'Person'], ['Man_X', 'isPerforming', 'Statue_Y'], ['Statue_Y', 'type','statue']]"
+38,A woman is slicing an onion.,A man is cutting an onion.,"[['woman', 'action', 'onion\_slicing']]","[['A_man', 'action', 'cutting'], ['Onion', 'isTypeOf', 'Food_item'], ['Onion', 'isUsedIn', 'Cutting']]"
+39,A woman peels shrimp.,A woman is peeling shrimp.,[],"[['A_woman', 'action', 'peel_shrimp']]
+['Shrimp', 'isInstanceOf', 'Food']
+['Food', 'type', 'Seafood']"
+40,A woman is frying fish.,A woman is cooking fish.,"[['woman', 'activity', 'frying'], ['woman', 'object', 'fish']]","[['woman', 'activity', 'cooking'], ['cooking', 'food', 'fish']]"
+41,A woman is playing an electric guitar.,A woman is playing a guitar.,"[['Woman', 'plays', 'Electric_guitar']]","[['woman', 'plays', 'guitar']]"
+42,A baby tiger is playing with a ball.,A baby is playing with a doll.,"[['Baby_tiger', 'isPlayingWith', 'Ball']]","[['Baby', 'playingWith', 'Doll']]"
+43,A person is slicing a tomato.,A person is slicing some meat.,"[['Person', 'action', 'tomato_slicing']]","[['Person', 'action','meat\_slicing']]"
+44,A person cuts an onion.,A person is cutting an onion.,"[['Person', 'action', 'cut'], ['Onion', 'isTypeOf', 'Food']]","[['Person', 'action', 'cutting'], ['Onion', 'isTypeOf', 'Food']]"
+45,A man is playing the piano.,A woman is playing the violin.,"[['Man', 'plays', 'Piano']]","[[' Woman', 'plays', 'Violin']]"
+46,A woman is playing the flute.,A man is playing the guitar.,"[[' Woman', 'plays', 'flute']]","[['Man', 'plays', 'Guitar']]"
+47,A man is cutting up a potato.,A man is cutting up carrots.,"[['A_man', 'action', 'cutting'], ['Potato', 'isBeingCutBy', 'A_man']]","[['man', 'action', 'cutting'], ['man', 'object', 'carrots']]"
+48,A kid is playing guitar.,A boy is playing a guitar.,"[['A_kid', 'plays', 'guitar']]","[['A_boy', 'plays', 'guitar']]"
+49,A boy is playing guitar.,A man is playing a guitar.,"[['Boy', 'plays', 'Guitar']]","[['Man', 'plays', 'Guitar']]"
+50,A man is playing guitar.,A boy is playing a guitar.,"[['Man', 'plays', 'Guitar']]","[['A_boy', 'plays', 'guitar']]"
+51,A little boy is playing a keyboard.,A boy is playing key board.,"[['a_little_boy', 'plays', 'keyboard']]","[['A_boy', 'plays', 'keyboard']]"
+52,A man is playing a guitar.,A man is playing an electric guitar.,"[['Man', 'plays', 'Guitar']]","[['Man', 'plays', 'Electric_guitar']]"
+53,A dog licks a baby.,A dog is licking a baby.,"[['dog', 'behavior', 'lick'], ['baby', 'age', 'baby']]
+['dog', 'entityType', 'Animal']
+['baby', 'entityType', 'Human']
+
+[['dog', 'interactsWith', 'baby']]","[['dog', 'action', 'licking'], ['baby', 'entity', 'baby']]
+['dog', 'entity', 'dog']
+['baby', 'entity', 'baby']"
+54,A woman is slicing an onion.,A man is cutting and onion.,"[['woman', 'action', 'onion\_slicing']]","[['A_man', 'action', 'cutting_an_onion']]"
+55,A man is playing the guitar.,A man is playing the drums.,"[['Man', 'plays', 'Guitar']]","[['Man', 'plays', 'Drums']]"
+56,A woman is slicing a pepper.,A woman is cutting a red pepper.,"[['woman', 'action','slice'], ['pepper', 'isTypeOf', 'pepper_vegetable']]","[['woman', 'action', 'cut'], ['woman', 'object','red_pepper']]"
+57,A man is playing the drums.,A man plays the drum.,"[['Man', 'plays', 'Drums']]","[['Man', 'plays', 'Drum']]"
+58,A woman rides a horse.,A woman is riding a horse.,"[['woman', 'rides', 'horse']]","[['woman', 'riding', 'horse']]"
+59,A man is eating a banana by a tree.,A man is eating a banana.,"[['Man', 'isEating', 'Banana'], ['Banana', 'isBeingEatenBy', 'Man'], ['Man', 'isSituatedNear', 'Tree']]","[['Man', 'isEating', 'Banana']]"
+60,A cat is playing a key board.,A man is playing two keyboards.,"[['Cat', 'plays', 'Keyboard']]","[['Man', 'plays', 'Keyboard1'], ['Man', 'plays', 'Keyboard2']]"
+61,A man chops down a tree with an axe.,A man cut a tree with an axe.,"[['Man', 'usesTool', 'Axe'], ['Axe', 'toolType', 'Axe'], ['Man', 'action', 'chopsDownTree']]","[['Man', 'uses', 'Axe'], ['Axe', 'tool', 'Tree']]"
+62,A kid plays with a toy phone.,A little boy plays with a toy phone.,"[['A_kid', 'playsWith', 'toy_phone']]","[['a_little_boy', 'playsWith', 'toy_phone']]"
+63,A man is riding a motorcycle.,A man is riding a horse.,"[['Man', 'riding', 'Motorcycle']]","[['Man', 'riding', 'Horse']]"
+64,A man is riding a motorcycle.,A man is riding a horse.,"[['Man', 'riding', 'Motorcycle']]","[['Man', 'riding', 'Horse']]"
+65,A squirrel is spinning around in circles.,A squirrel runs around in circles.,"[['Squirrel', 'action','spinning_around'], ['Squirrel','motion', 'circles']]","[['Squirrel', 'runsAround', 'Circle']]"
+66,A man and a woman are kissing.,A man and woman kiss.,[],[]
+67,A man is getting into a car.,A man is getting into a car in a garage.,"[['Man', 'action', 'getting_into'], ['Man', 'entity', 'car']]","[['Man', 'action', 'getting_into'], ['Man', 'location', 'garage'], ['Garage', 'type', 'car_garage']]"
+68,A man is dancing.,A man is talking.,"[['Man', 'isPerforming', 'Dancing']]",[]
+69,A man is playing the guitar and singing.,A man is playing the guitar.,"[['Man', 'plays', 'Guitar'], ['Man','singing']]","[['Man', 'plays', 'Guitar']]"
+70,A person is cutting mushrooms.,A person is cutting mushrooms with a knife.,"[['Person', 'action', 'cutting'], ['Person', 'object','mushrooms']]","[['Person', 'action', 'cutting'], ['Person', 'tool', 'knife'], ['Mushrooms', 'isBeingCutBy', 'Person']]"
+71,A tiger cub is making a sound.,A tiger is walking around.,"[['Tiger_cub','makingSound', 'True']]","[['Tiger', 'isWalkingAround']]"
+72,A person is slicing onions.,A person is peeling an onion.,"[['Person', 'action','slicing_onions']]","[['Person', 'action', 'peel_onion']]"
+73,A man is playing the piano.,A man is playing the trumpet.,"[['Man', 'plays', 'Piano']]","[['Man', 'plays', 'Trumpet']]"
+74,A woman is peeling a potato.,A woman is peeling an apple.,"[['A_woman', 'action', 'peel_potato']]","[['Apple', 'isBeingPeeledBy', 'Woman']]"
+75,A pankda is eating bamboo.,A panda bear is eating some bamboo.,"[['Pankda', 'isEating', 'Bamboo']]","[['Panda_bear', 'eating', 'Bamboo']]"
+76,A person is peeling an onion.,A person is peeling an eggplant.,"[['Person', 'action', 'peel_onion']]","[['eggplant', 'isBeingPeeledBy', 'Person']]"
+77,A monkey pushes another monkey.,The monkey pushed the other monkey.,"[['Monkey1', 'pushes', 'Monkey2']]","[['Monkey1', 'pushed', 'Monkey2']]"
+78,A squirrel runs around in circles.,A squirrel is moving in circles.,"[['Squirrel', 'runsAround', 'Circle']]","[['Squirrel', 'action','moving_in_circles']]"
+79,A man is tying his shoe.,A man ties his shoe.,"[['A_man', 'isPerforming', 'tying_his_shoe']]","[['A_man', 'action', 'ties_shoe']]"
+80,A boy is singing and playing the piano.,A boy is playing the piano.,"[['Boy','singing', '_'], ['Boy', 'playing', 'Piano']]","[['Boy', 'plays', 'Piano']]"
+81,A dog is eating water melon.,A dog is eating a piece of watermelon.,"[['A_dog', 'eats', 'Water_melon']]","[['A_dog', 'action', 'eating'], ['A_dog', 'food', 'watermelon']]"
+82,A woman is chopping broccoli.,A woman is chopping broccoli with a knife.,"[['woman', 'action', 'chopping'], ['broccoli', 'beingChoppedBy', 'woman']]","[['woman', 'chops', 'broccoli'], ['broccoli', 'isChoppedBy', 'woman'], ['woman', 'uses', 'knife'], ['knife', 'isUsedForChopping', 'broccoli']]"
+83,A man is peeling a potato.,A man peeled a potatoe.,"[['A_man', 'action', 'peel_potato']]","[['A_man', 'action', 'peel'], ['Potatoe', 'isInstanceOf', 'Potato']]"
+84,A woman is playing a guitar.,A man plays a guitar.,"[['woman', 'plays', 'guitar']]","[['Man', 'plays', 'Guitar']]"
+85,A woman is slicing tomato.,A man is slicing onion.,"[['woman', 'action', 'tomato_slicing']]","[['Man', 'action','slicing_onion']]"
+86,A man swims underwater.,A woman is swimming underwater.,"[['Man','swims', '_'], ['Man', 'location', 'underwater']]","[[' Woman', 'activity','swimming'], [' Woman', 'location', 'underwater']]"
+87,A man and woman are talking.,A man and woman is eating.,[],"[['Man', 'isEating','Woman'], ['Man','relationship', 'Eating'], ['Woman', 'isEating','Man'], ['Woman','relationship', 'Eating']]"
+88,A small dog is chasing a yoga ball.,A dog is chasing a ball.,"[['small_dog', 'action', 'chasing'], ['small_dog', 'object', 'yoga\_ball']]","[['A_dog', 'action', 'chase'], ['A_dog', 'object', 'ball']]"
+89,The men are playing cricket.,The men are playing basketball.,"[['Men', 'play', 'Cricket']]","[['Men', 'playSport', 'Basketball']]"
+90,A man rides off on a motorcycle.,A man is riding on a motorcycle.,"[['Man', 'rides', 'Motorcycle']]","[['Man', 'isRidingOn', 'Motorcycle']]"
+91,A man is playing a guitar.,A man is singing and playing a guitar.,"[['Man', 'plays', 'Guitar']]","[['Man','singing', '_'], ['Man', 'playingMusicInstrument', 'Guitar']]"
+92,The man talked on the telephone.,The man is talking on the phone.,"[['man', 'talkedOn', 'telephone']]","[['man', 'activity', 'talking_on_phone']]"
+93,A man is fishing.,A man is exercising.,"[['Man', 'activity', 'Fishing']]","[['A_man', 'isPerforming', 'Exercising']]"
+94,A man is levitating.,A man is talking.,[],[]
+95,Two boys are driving.,Two bays are dancing.,"[['Two_boys', 'activity', 'driving']]",[]
+96,A man is riding on a horse.,A girl is riding a horse.,"[['Man', 'ridingOn', 'Horse']]","[['girl', 'riding', 'horse']]"
+97,A man is riding a bicycle.,A monkey is riding a bike.,"[['Man', 'riding', 'Bicycle']]","[['Monkey', 'riding', 'Bike']]"
+98,A man is slicing potatoes.,A woman is peeling potato.,"[['Man', 'action', 'potato_slicing']]","[['A_woman', 'action', 'peeling_potato']]"
+99,A woman is peeling a potato.,A man is slicing potato.,"[['A_woman', 'action', 'peel_potato']]","[['Man', 'action','slice_potato']]"
