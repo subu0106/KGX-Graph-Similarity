@@ -16,6 +16,10 @@ from .aa_kea import (
     calculate_attention_augmented_similarity
 )
 from .kea_bert import calculate_kea_bert_similarity
+from .gnn_similarity import (
+    calculate_gnn_similarity,
+    calculate_gnn_similarity_with_info,
+)
 
 __all__ = [
     'TransE',
@@ -28,4 +32,6 @@ __all__ = [
     'calculate_aa_kea_similarity',
     'calculate_attention_augmented_similarity',
     'calculate_kea_bert_similarity',
+    'calculate_gnn_similarity',
+    'calculate_gnn_similarity_with_info',
 ]
