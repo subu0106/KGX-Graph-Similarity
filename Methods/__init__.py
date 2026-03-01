@@ -15,6 +15,10 @@ from .aa_kea import (
     calculate_aa_kea_similarity,
     calculate_attention_augmented_similarity
 )
+from .enhance_aa_kea import (
+    calculate_enhanced_aa_kea_similarity,
+    calculate_enhanced_aa_kea_similarity_score
+)
 from .kea_bert import calculate_kea_bert_similarity
 from .gnn_similarity import (
     calculate_gnn_similarity,
@@ -31,6 +35,8 @@ __all__ = [
     'calculate_gaussian_feature_similarity',
     'calculate_aa_kea_similarity',
     'calculate_attention_augmented_similarity',
+    'calculate_enhanced_aa_kea_similarity',
+    'calculate_enhanced_aa_kea_similarity_score',
     'calculate_kea_bert_similarity',
     'calculate_gnn_similarity',
     'calculate_gnn_similarity_with_info',

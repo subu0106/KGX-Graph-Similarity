@@ -29,7 +29,8 @@ from Methods import (
     calculate_aa_kea_similarity,
     calculate_pure_wl_kernel_similarity,
     GraphEmbeddingSimilarity,
-    calculate_kea_bert_similarity
+    calculate_kea_bert_similarity,
+    calculate_enhanced_aa_kea_similarity_score
 )
 
 
@@ -64,6 +65,7 @@ def process_dataset(input_file, output_file):
                   'kea_composite', 'kea_structural', 'kea_semantic',
                   'transe_similarity', 'rotate_similarity', 'wl_kernel_similarity',
                   'aa_kea_similarity',
+                  'enhanced_aa_kea_similarity',
                   'kea_bert_similarity']
 
     with open(input_file, 'r', encoding='utf-8') as f:
@@ -103,6 +105,7 @@ def process_dataset(input_file, output_file):
                     'rotate_similarity': None,
                     'wl_kernel_similarity': None,
                     'aa_kea_similarity': None,
+                    'enhanced_aa_kea_similarity': None,
                     'kea_bert_similarity': None,
                 })
             else:
@@ -150,7 +153,13 @@ def process_dataset(input_file, output_file):
                 except Exception:
                     result['aa_kea_similarity'] = None
 
-                # 7. KEA-BERT (BERTScore-inspired semantic similarity)
+                # 7. Enhanced AA-KEA (WL kernel + SBERT mean-pool blend, alpha=0.5)
+                try:
+                    result['enhanced_aa_kea_similarity'] = calculate_enhanced_aa_kea_similarity_score(triples1, triples2)
+                except Exception:
+                    result['enhanced_aa_kea_similarity'] = None
+
+                # 9. KEA-BERT (BERTScore-inspired semantic similarity)
                 try:
                     result['kea_bert_similarity'] = calculate_kea_bert_similarity(triples1, triples2)
                 except Exception:
@@ -191,6 +200,7 @@ def plot_individual_method_results(results, output_file_base):
         'RotatE (Rotation Embedding)': ('rotate_similarity', '#F18F01'),
         'Pure WL Kernel (Structural Only)': ('wl_kernel_similarity', '#6A994E'),
         'AA-KEA (Attention + WL)': ('aa_kea_similarity', '#9B59B6'),
+        'Enhanced AA-KEA (WL + SBERT Blend)': ('enhanced_aa_kea_similarity', '#1ABC9C'),
         'KEA-BERT (BERTScore Semantic)': ('kea_bert_similarity', '#E67E22'),
     }
 
