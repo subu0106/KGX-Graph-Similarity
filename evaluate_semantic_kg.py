@@ -21,16 +21,18 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from scipy import stats
 
 INPUT_FILE  = "data/semantic_kg_transformed.csv"
-OUTPUT_FILE = "results/semantic_kg_eval/with_enhanced_aa_similarity_results.csv"
+OUTPUT_FILE = "results/semantic_kg_eval/all_methods_results.csv"
 
 METHODS = [
     'kea_similarity',
     'kea_composite', 'kea_structural', 'kea_semantic',
     'transe_similarity', 'rotate_similarity',
     'wl_kernel_similarity',
+    'snea_similarity',
     'aa_kea_similarity',
     'enhanced_aa_kea_similarity',
     'kea_bert_similarity',
+    'semantic_wl_similarity',
 ]
 
 FIELDNAMES  = ['graph_1', 'graph_2', 'similarity_score_ground'] + METHODS
@@ -70,6 +72,8 @@ def compute_row(triples1, triples2):
         calculate_pure_wl_kernel_similarity,
         GraphEmbeddingSimilarity,
         calculate_kea_bert_similarity,
+        calculate_semantic_wl_similarity_score,
+        calculate_snea_similarity_score,
     )
 
     scores = {m: None for m in METHODS}
@@ -105,6 +109,11 @@ def compute_row(triples1, triples2):
         pass
 
     try:
+        scores['snea_similarity'] = calculate_snea_similarity_score(triples1, triples2)
+    except Exception:
+        pass
+
+    try:
         scores['aa_kea_similarity'] = calculate_aa_kea_similarity(triples1, triples2)
     except Exception:
         pass
@@ -116,6 +125,11 @@ def compute_row(triples1, triples2):
 
     try:
         scores['kea_bert_similarity'] = calculate_kea_bert_similarity(triples1, triples2)
+    except Exception:
+        pass
+
+    try:
+        scores['semantic_wl_similarity'] = calculate_semantic_wl_similarity_score(triples1, triples2)
     except Exception:
         pass
 

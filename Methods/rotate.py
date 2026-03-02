@@ -9,7 +9,7 @@ import torch.nn as nn
 
 
 class RotatE(nn.Module):
-    def __init__(self, num_entities, num_relations, embedding_dim=50, margin=6.0):
+    def __init__(self, num_entities, num_relations, embedding_dim=512, margin=6.0):
         super(RotatE, self).__init__()
         self.embedding_dim = embedding_dim
         self.entity_embeddings = nn.Embedding(num_entities, embedding_dim * 2)  # real + imaginary

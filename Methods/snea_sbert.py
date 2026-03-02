@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 """
-Enhanced AA-KEA — WL Kernel + SBERT Semantic Blend
+SNEA-SBERT — SNEA + SBERT Semantic Blend
 
-Fixes the discrete/quantized score problem in aa_kea.py by blending the
-existing WL kernel score with a fully continuous SBERT semantic similarity
-component (mean-pooled cosine similarity over triple embeddings).
+Extends SNEA (snea.py) by adding a continuous SBERT semantic component to
+fix the discrete/quantized score problem produced by the WL kernel alone.
 
-Why the original AA-KEA produces stepped/flat ROC curves:
+Why SNEA produces stepped/flat ROC curves:
     WL kernel counts integer matches of discrete label patterns on small KGs
     (4-12 nodes). After soft label alignment collapses labels into a handful
     of strings (node_0, node_1, ...), only ~5-6 distinct WL scores are
     possible → stepped ROC / poor threshold resolution.
 
-Fix (Option 1):
-    Keep the full AA-KEA pipeline unchanged (triple matching, soft label
-    alignment, WL kernel). After computing the WL score, also compute the
-    cosine similarity between mean-pooled SBERT embeddings of both KGs, then
-    average the two:
+Fix:
+    Keep the full SNEA pipeline unchanged (triple matching, entity/relation
+    soft label alignment, WL kernel). After computing the WL score, also
+    compute the cosine similarity between mean-pooled SBERT embeddings of
+    both KGs, then average the two:
 
         score = 0.5 * wl_score + 0.5 * sbert_score
 
@@ -24,11 +23,11 @@ Fix (Option 1):
     dilutes the discrete WL values and produces a smooth output range.
 
 Pipeline:
-    1. Semantic Triple Matching   — same as aa_kea.py
-    2. Soft Label Alignment       — same as aa_kea.py
-    3. WL Kernel                  — same as aa_kea.py  → wl_score
-    4. SBERT Mean-Pool Cosine     — new                → sbert_score
-    5. Blend at alpha=0.5         — new                → final score
+    1. Semantic Triple Matching   — same as snea.py
+    2. Soft Label Alignment       — same as snea.py (entity + relation separated)
+    3. WL Kernel                  — same as snea.py  → wl_score
+    4. SBERT Mean-Pool Cosine     — new              → sbert_score
+    5. Blend at alpha=0.5         — new              → final score
 """
 
 import networkx as nx
@@ -187,11 +186,11 @@ def _sbert_mean_cosine(kg1_triples, kg2_triples):
 
 def calculate_enhanced_aa_kea_similarity(kg1_triples, kg2_triples, alpha=ALPHA):
     """
-    Compute similarity between two KGs using the Enhanced AA-KEA method.
+    Compute similarity between two KGs using the SNEA-SBERT method.
 
-    Steps 1-3 are identical to aa_kea.py (triple matching → soft label
-    alignment → WL kernel). Step 4 adds a continuous SBERT component, and
-    Step 5 blends the two at the given alpha.
+    Steps 1-3 are identical to snea.py (triple matching → entity/relation
+    soft label alignment → WL kernel). Step 4 adds a continuous SBERT
+    component, and Step 5 blends the two at the given alpha.
 
     Args:
         kg1_triples : list of [subject, predicate, object] — gold / reference KG
@@ -297,7 +296,7 @@ def calculate_enhanced_aa_kea_similarity_score(kg1_triples, kg2_triples):
 
 if __name__ == '__main__':
     print('=' * 60)
-    print('Enhanced AA-KEA — WL + SBERT Blend (alpha=0.5)')
+    print('SNEA-SBERT — SNEA + SBERT Blend (alpha=0.5)')
     print('=' * 60)
 
     kg1 = [

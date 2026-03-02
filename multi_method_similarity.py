@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """
 Multi-method graph similarity comparison
-Compares gemini answer pairs using:
-1. KEA (Graph Kernel - Weisfeiler-Lehman + Clustering)
-2. KEA Composite (Gaussian + WL Kernel)
-3. KEA Semantic (Gaussian kernel only)
-4. TransE graph embedding
-5. RotatE graph embedding
-6. Pure WL kernel (structural only)
-7. AA-KEA (Attention-Augmented KEA)
-8. KEA-BERT (BERTScore-inspired semantic similarity)
+Compares KG pairs using:
+1.  KEA (Graph Kernel — Weisfeiler-Lehman + Clustering)
+2.  KEA Composite (Gaussian + WL Kernel)
+3.  KEA Semantic (Gaussian kernel only)
+4.  TransE (Translation graph embedding)
+5.  RotatE (Rotation graph embedding)
+6.  Pure WL Kernel (structural only)
+7.  SNEA (Semantic Node Edge Aligned — entity/relation soft alignment + WL)
+8.  AA-KEA (Attention-Augmented KEA)
+9.  SNEA-SBERT (SNEA + SBERT mean-pool blend, alpha=0.5)
+10. KEA-BERT (BERTScore-inspired semantic similarity)
+11. Semantic WL Kernel (directed graph + SBERT neighbourhood relabelling)
 """
 
 import csv
@@ -30,7 +33,9 @@ from Methods import (
     calculate_pure_wl_kernel_similarity,
     GraphEmbeddingSimilarity,
     calculate_kea_bert_similarity,
-    calculate_enhanced_aa_kea_similarity_score
+    calculate_enhanced_aa_kea_similarity_score,
+    calculate_semantic_wl_similarity_score,
+    calculate_snea_similarity_score,
 )
 
 
@@ -64,9 +69,11 @@ def process_dataset(input_file, output_file):
                   'kea_similarity',
                   'kea_composite', 'kea_structural', 'kea_semantic',
                   'transe_similarity', 'rotate_similarity', 'wl_kernel_similarity',
+                  'snea_similarity',
                   'aa_kea_similarity',
                   'enhanced_aa_kea_similarity',
-                  'kea_bert_similarity']
+                  'kea_bert_similarity',
+                  'semantic_wl_similarity']
 
     with open(input_file, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
@@ -104,9 +111,11 @@ def process_dataset(input_file, output_file):
                     'transe_similarity': None,
                     'rotate_similarity': None,
                     'wl_kernel_similarity': None,
+                    'snea_similarity': None,
                     'aa_kea_similarity': None,
                     'enhanced_aa_kea_similarity': None,
                     'kea_bert_similarity': None,
+                    'semantic_wl_similarity': None,
                 })
             else:
                 embedding_calculator = GraphEmbeddingSimilarity(embedding_dim=50)
@@ -147,23 +156,35 @@ def process_dataset(input_file, output_file):
                 except Exception:
                     result['wl_kernel_similarity'] = None
 
-                # 6. AA-KEA (Attention-Augmented KEA)
+                # 6. SNEA (Semantic Node Edge Aligned)
+                try:
+                    result['snea_similarity'] = calculate_snea_similarity_score(triples1, triples2)
+                except Exception:
+                    result['snea_similarity'] = None
+
+                # 7. AA-KEA (Attention-Augmented KEA)
                 try:
                     result['aa_kea_similarity'] = calculate_aa_kea_similarity(triples1, triples2)
                 except Exception:
                     result['aa_kea_similarity'] = None
 
-                # 7. Enhanced AA-KEA (WL kernel + SBERT mean-pool blend, alpha=0.5)
+                # 9. SNEA-SBERT (SNEA + SBERT mean-pool blend, alpha=0.5)
                 try:
                     result['enhanced_aa_kea_similarity'] = calculate_enhanced_aa_kea_similarity_score(triples1, triples2)
                 except Exception:
                     result['enhanced_aa_kea_similarity'] = None
 
-                # 9. KEA-BERT (BERTScore-inspired semantic similarity)
+                # 10. KEA-BERT (BERTScore-inspired semantic similarity)
                 try:
                     result['kea_bert_similarity'] = calculate_kea_bert_similarity(triples1, triples2)
                 except Exception:
                     result['kea_bert_similarity'] = None
+
+                # 11. Semantic WL Kernel (directed graph + SBERT neighbourhood relabelling)
+                try:
+                    result['semantic_wl_similarity'] = calculate_semantic_wl_similarity_score(triples1, triples2)
+                except Exception:
+                    result['semantic_wl_similarity'] = None
 
                 del embedding_calculator
 
@@ -199,9 +220,11 @@ def plot_individual_method_results(results, output_file_base):
         'TransE (Translation Embedding)': ('transe_similarity', '#A23B72'),
         'RotatE (Rotation Embedding)': ('rotate_similarity', '#F18F01'),
         'Pure WL Kernel (Structural Only)': ('wl_kernel_similarity', '#6A994E'),
+        'SNEA (Semantic Node Edge Aligned)': ('snea_similarity', '#27AE60'),
         'AA-KEA (Attention + WL)': ('aa_kea_similarity', '#9B59B6'),
-        'Enhanced AA-KEA (WL + SBERT Blend)': ('enhanced_aa_kea_similarity', '#1ABC9C'),
+        'SNEA-SBERT (SNEA + SBERT Blend)': ('enhanced_aa_kea_similarity', '#1ABC9C'),
         'KEA-BERT (BERTScore Semantic)': ('kea_bert_similarity', '#E67E22'),
+        'Semantic WL Kernel (Directed + SBERT)': ('semantic_wl_similarity', '#C0392B'),
     }
 
     print("Generating individual plots for each method...")

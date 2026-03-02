@@ -11,13 +11,21 @@ from .kea import (
     calculate_composite_similarity,
     calculate_gaussian_feature_similarity
 )
+from .snea import (
+    calculate_snea_similarity,
+    calculate_snea_similarity_score,
+)
 from .aa_kea import (
     calculate_aa_kea_similarity,
     calculate_attention_augmented_similarity
 )
-from .enhance_aa_kea import (
+from .snea_sbert import (
     calculate_enhanced_aa_kea_similarity,
     calculate_enhanced_aa_kea_similarity_score
+)
+from .semantic_wl_kernel_chamath import (
+    calculate_semantic_wl_similarity,
+    calculate_semantic_wl_similarity_score,
 )
 from .kea_bert import calculate_kea_bert_similarity
 from .gnn_similarity import (
@@ -33,6 +41,8 @@ __all__ = [
     'calculate_similarity',
     'calculate_composite_similarity',
     'calculate_gaussian_feature_similarity',
+    'calculate_snea_similarity',
+    'calculate_snea_similarity_score',
     'calculate_aa_kea_similarity',
     'calculate_attention_augmented_similarity',
     'calculate_enhanced_aa_kea_similarity',
@@ -40,4 +50,6 @@ __all__ = [
     'calculate_kea_bert_similarity',
     'calculate_gnn_similarity',
     'calculate_gnn_similarity_with_info',
+    'calculate_semantic_wl_similarity',
+    'calculate_semantic_wl_similarity_score',
 ]

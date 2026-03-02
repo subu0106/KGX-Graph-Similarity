@@ -18,8 +18,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import stats
 
-RESULTS_CSV = "results/semantic_kg_eval/with_enhanced_aa_similarity_results.csv"
-OUT_DIR     = "results/semantic_kg_eval/with_enhanced_aa_similarity_final_analysis"
+RESULTS_CSV = "results/semantic_kg_eval/all_methods_results.csv"
+OUT_DIR     = "results/semantic_kg_eval/all_methods_final_analysis"
 
 METHODS = [
     'kea_similarity',
@@ -29,9 +29,11 @@ METHODS = [
     'transe_similarity',
     # 'rotate_similarity',
     'wl_kernel_similarity',
+    'snea_similarity',
     'aa_kea_similarity',
     'enhanced_aa_kea_similarity',
     'kea_bert_similarity',
+    'semantic_wl_similarity',
 ]
 
 COLORS = {
@@ -42,9 +44,11 @@ COLORS = {
     'transe_similarity':    '#A23B72',
     'rotate_similarity':    '#F18F01',
     'wl_kernel_similarity': '#6A994E',
+    'snea_similarity':      '#27AE60',
     'aa_kea_similarity':          '#9B59B6',
     'enhanced_aa_kea_similarity': '#1ABC9C',
     'kea_bert_similarity':        '#E67E22',
+    'semantic_wl_similarity':     '#C0392B',
 }
 
 N_BOOTSTRAP = 1000
