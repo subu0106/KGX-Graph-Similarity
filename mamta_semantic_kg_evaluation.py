@@ -467,7 +467,7 @@ def evaluate_all_methods(df):
     # Define methods to evaluate
     methods = {
         'AA-KEA (Our Method)': 'aa_kea_similarity',
-        'SNEA-SBERT':     'enhanced_aa_kea_similarity',
+        'SNEA-SBERT':     'snea_bert_similarity',
         'KEA':                 'kea_similarity',
         'KEA-BERT':            'kea_bert_similarity',
         'WL Kernel':           'wl_kernel_similarity',
@@ -514,7 +514,7 @@ def evaluate_by_perturbation_type(df):
 
     methods = {
         'AA-KEA':          'aa_kea_similarity',
-        'SNEA-SBERT': 'enhanced_aa_kea_similarity',
+        'SNEA-SBERT': 'snea_bert_similarity',
         'KEA':             'kea_similarity',
         'KEA-BERT':        'kea_bert_similarity',
         'WL Kernel':       'wl_kernel_similarity',
@@ -731,7 +731,7 @@ def domain_transfer_analysis(df, methods_scores):
     # Methods to evaluate
     methods = {
         'AA-KEA':          'aa_kea_similarity',
-        'SNEA-SBERT': 'enhanced_aa_kea_similarity',
+        'SNEA-SBERT': 'snea_bert_similarity',
         'KEA':             'kea_similarity',
         'BERTScore':       'bertscore_f1',
         'Sentence-T5':     'sentence-t5-base_similarity',
@@ -1034,7 +1034,7 @@ def plot_roc_curves(df, output_dir):
 
     methods = {
         'AA-KEA':          ('aa_kea_similarity',          '#d62728'),
-        'SNEA-SBERT': ('enhanced_aa_kea_similarity', '#1ABC9C'),
+        'SNEA-SBERT': ('snea_bert_similarity', '#1ABC9C'),
         'KEA':             ('kea_similarity',             '#17a2b8'),
         'KEA-BERT':        ('kea_bert_similarity',        '#6f42c1'),
         'WL Kernel':       ('wl_kernel_similarity',       '#6A994E'),
@@ -1195,7 +1195,7 @@ def load_kg_results_data(kg_results_file: str, label_threshold=None) -> pd.DataF
     """
     Load the CSV produced by evaluate_semantic_kg.py.
     Columns expected: graph_1, graph_2, similarity_score_ground,
-                      kea_similarity, aa_kea_similarity, enhanced_aa_kea_similarity, ...
+                      kea_similarity, aa_kea_similarity, snea_bert_similarity, ...
 
     Binary label is derived from similarity_score_ground:
         label = 1  if score >= threshold

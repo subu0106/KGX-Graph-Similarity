@@ -124,10 +124,11 @@ if __name__ == "__main__":
     import argparse
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
+    data_dir   = os.path.join(script_dir, '..', 'Data')
 
     parser = argparse.ArgumentParser(description='AA-KEA Similarity for wikipedia_entity_swap_400 Dataset')
     parser.add_argument('--input',  type=str,
-                        default=os.path.join(script_dir, 'wikipedia_entity_swap_400_KGs.csv'),
+                        default=os.path.join(data_dir, 'wikipedia_entity_swap_400_KGs.csv'),
                         help='Input CSV file')
     parser.add_argument('--output', type=str,
                         default=os.path.join(script_dir, 'part2_wikipedia_entity_swap_400_aa_kea_results.csv'),

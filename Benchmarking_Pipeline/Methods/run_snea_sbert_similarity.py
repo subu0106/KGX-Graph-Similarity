@@ -1,37 +1,28 @@
 #!/usr/bin/env python3
 """
-Run KEA-BERT similarity on a dataset (paraphrase pairs with KGs).
-Compares kg_1 vs kg_2 for each paragraph pair using the
-BERTScore-inspired graph semantic scoring method.
+Run SNEA-SBERT similarity on MRPC dataset (paraphrase pairs with KGs).
+Compares kg_1 vs kg_2 for each paragraph pair.
 """
 
 import csv
 import ast
 import sys
 import os
-import logging
 
-# Suppress verbose load-report warnings from sentence_transformers / transformers
-logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
-logging.getLogger("transformers").setLevel(logging.ERROR)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from Methods import calculate_kea_bert_similarity
+from Methods import calculate_snea_sbert_similarity_score
 
 
-def process_dataset(input_file, output_file, limit=None):
-    """Process dataset and calculate KEA-BERT similarity between kg_1 and kg_2."""
+def process_mrpc_dataset(input_file, output_file):
+    """Process MRPC dataset and calculate SNEA-SBERT similarity between kg_1 and kg_2."""
 
     results = []
-    fieldnames = ['id', 'paragraph_1', 'paragraph_2', 'kg_1', 'kg_2', 'kea_bert_similarity']
+    fieldnames = ['id', 'paragraph_1', 'paragraph_2', 'kg_1', 'kg_2', 'snea_bert_similarity']
 
     with open(input_file, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         rows = list(reader)
-
-    if limit:
-        rows = rows[:limit]
 
     total_rows = len(rows)
     print(f"Total rows: {total_rows}\n")
@@ -56,25 +47,25 @@ def process_dataset(input_file, output_file, limit=None):
                 print(f"  ERROR parsing KGs: {e}")
                 kg1, kg2 = [], []
 
-            kg1 = [t for t in kg1 if isinstance(t, list) and len(t) == 3]
-            kg2 = [t for t in kg2 if isinstance(t, list) and len(t) == 3]
+            kg1 = [triple for triple in kg1 if isinstance(triple, list) and len(triple) == 3]
+            kg2 = [triple for triple in kg2 if isinstance(triple, list) and len(triple) == 3]
 
             if kg1 and kg2:
                 try:
-                    kea_bert_sim = calculate_kea_bert_similarity(kg1, kg2)
+                    snea_bert_sim = calculate_snea_sbert_similarity_score(kg1, kg2)
                 except Exception as e:
-                    print(f"  ERROR in KEA-BERT: {e}")
-                    kea_bert_sim = 0.0
+                    print(f"  ERROR in SNEA-SBERT: {e}")
+                    snea_bert_sim = 0.0
             else:
-                kea_bert_sim = 0.0
+                snea_bert_sim = 0.0
 
             result_row = {
-                'id':                row_id,
-                'paragraph_1':       paragraph1,
-                'paragraph_2':       paragraph2,
-                'kg_1':              kg1_str,
-                'kg_2':              kg2_str,
-                'kea_bert_similarity': kea_bert_sim,
+                'id':                  row_id,
+                'paragraph_1':         paragraph1,
+                'paragraph_2':         paragraph2,
+                'kg_1':                kg1_str,
+                'kg_2':                kg2_str,
+                'snea_bert_similarity': snea_bert_sim,
             }
 
             writer.writerow(result_row)
@@ -83,7 +74,8 @@ def process_dataset(input_file, output_file, limit=None):
 
     print(f"\nOutput saved to: {output_file}")
 
-    similarities = [r['kea_bert_similarity'] for r in results if r['kea_bert_similarity'] > 0]
+    similarities = [r['snea_bert_similarity'] for r in results if r['snea_bert_similarity'] > 0]
+
     if similarities:
         avg     = sum(similarities) / len(similarities)
         max_sim = max(similarities)
@@ -93,13 +85,13 @@ def process_dataset(input_file, output_file, limit=None):
     return results
 
 
-def generate_summary(results, output_dir, dataset_name):
-    """Generate summary statistics and save to a txt file."""
+def generate_summary(results, output_dir):
+    """Generate summary statistics and save to summary.txt."""
 
-    valid_sims = [r['kea_bert_similarity'] for r in results if r['kea_bert_similarity'] > 0]
+    valid_sims = [r['snea_bert_similarity'] for r in results if r['snea_bert_similarity'] > 0]
 
     if not valid_sims:
-        print("No valid similarities to summarize.")
+        print("No valid similarities to summarize")
         return
 
     import numpy as np
@@ -112,10 +104,10 @@ def generate_summary(results, output_dir, dataset_name):
     perfect = sum(1 for s in valid_sims if s >= 0.95)
     high    = sum(1 for s in valid_sims if s >= 0.8)
 
-    summary_file = os.path.join(output_dir, f"{dataset_name}_kea_bert_summary.txt")
+    summary_file = os.path.join(output_dir, "mrpc_snea_bert_summary.txt")
 
     with open(summary_file, 'w') as f:
-        f.write(f"{dataset_name.upper()} KEA-BERT SIMILARITY SUMMARY STATISTICS\n\n")
+        f.write("MRPC SNEA-SBERT SUMMARY STATISTICS\n\n")
         f.write(f"Total valid pairs: {len(valid_sims)}/{len(results)}\n\n")
         f.write(f"Average:           {avg*100:.2f}%\n")
         f.write(f"Median:            {median*100:.2f}%\n")
@@ -132,29 +124,31 @@ if __name__ == "__main__":
     import argparse
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
+    data_dir   = os.path.join(script_dir, '..', 'Data')
 
-    parser = argparse.ArgumentParser(description='KEA-BERT Similarity Benchmarking')
-    parser.add_argument('--input',   type=str,
-                        default=os.path.join(script_dir, 'mrpc_400_KGs.csv'),
-                        help='Input CSV file (must have id, paragraph_1, paragraph_2, kg_1, kg_2)')
-    parser.add_argument('--output',  type=str,
-                        default=os.path.join(script_dir, 'mrpc_400_kea_bert_results.csv'),
+    parser = argparse.ArgumentParser(description='SNEA-SBERT Similarity for wikipedia_entity_swap_400 Dataset')
+    parser.add_argument('--input',  type=str,
+                        default=os.path.join(data_dir, 'wikipedia_entity_swap_400_KGs.csv'),
+                        help='Input CSV file')
+    parser.add_argument('--output', type=str,
+                        default=os.path.join(script_dir, 'results/wikipedia_entity_swap_400_snea_bert_results.csv'),
                         help='Output CSV file')
-    parser.add_argument('--limit',   type=int, default=None,
+    parser.add_argument('--limit',  type=int, default=None,
                         help='Limit number of rows (for testing)')
-    parser.add_argument('--dataset', type=str, default='mrpc',
-                        help='Dataset name used in summary filename (default: mrpc)')
 
     args = parser.parse_args()
 
-    os.makedirs(os.path.dirname(args.output) or '.', exist_ok=True)
+    os.makedirs(os.path.dirname(args.output), exist_ok=True)
 
-    print(f"Input:   {args.input}")
-    print(f"Output:  {args.output}")
-    print(f"Dataset: {args.dataset}")
+    print(f"Input:  {args.input}")
+    print(f"Output: {args.output}")
     if args.limit:
-        print(f"Limit:   {args.limit} rows")
+        print(f"Limit:  {args.limit} rows")
     print()
 
-    results = process_dataset(args.input, args.output, limit=args.limit)
-    generate_summary(results, script_dir, args.dataset)
+    results = process_mrpc_dataset(args.input, args.output)
+
+    if args.limit:
+        results = results[:args.limit]
+
+    generate_summary(results, script_dir)
