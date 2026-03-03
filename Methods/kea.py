@@ -137,7 +137,7 @@ def match_and_filter_triples(kg1_triples, kg2_triples):
             picked_triples.append(chosen_triple[1])
     return picked_triples
 
-def calculate_similarity(kg1_triples, kg2_triples):
+def calculate_kea_similarity(kg1_triples, kg2_triples):
 
     kg1_triples = [sublist for sublist in kg1_triples if len(sublist) == 3]
     kg2_triples = [sublist for sublist in kg2_triples if len(sublist) == 3]
@@ -243,7 +243,7 @@ def calculate_gaussian_feature_similarity(kg1_triples, kg2_triples, sigma=1.0):
     return float(np.mean(similarities))
 
 
-def calculate_composite_similarity(kg1_triples, kg2_triples, alpha=0.6, sigma=1.0):
+def calculate_kea_composite_similarity(kg1_triples, kg2_triples, alpha=0.6, sigma=1.0):
     """
     Composite kernel: combines structural and semantic similarity
 
@@ -265,7 +265,7 @@ def calculate_composite_similarity(kg1_triples, kg2_triples, alpha=0.6, sigma=1.
         }
     """
     # Structural similarity (existing KEA with WL kernel)
-    structural_sim, _, _ = calculate_similarity(kg1_triples, kg2_triples)
+    structural_sim, _, _ = calculate_kea_similarity(kg1_triples, kg2_triples)
 
     # Semantic similarity (new Gaussian kernel)
     semantic_sim = calculate_gaussian_feature_similarity(kg1_triples, kg2_triples, sigma)

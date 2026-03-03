@@ -65,11 +65,11 @@ def compute_row(triples1, triples2):
     first call (Python module cache).
     """
     from Methods import (
-        calculate_similarity,
-        calculate_composite_similarity,
+        calculate_kea_similarity,
+        calculate_kea_composite_similarity,
         calculate_aa_kea_similarity,
-        calculate_enhanced_aa_kea_similarity_score,
-        calculate_pure_wl_kernel_similarity,
+        calculate_snea_sbert_similarity_score,
+        calculate_wl_kernel_similarity,
         GraphEmbeddingSimilarity,
         calculate_kea_bert_similarity,
         calculate_semantic_wl_similarity_score,
@@ -80,13 +80,13 @@ def compute_row(triples1, triples2):
     embedding_calculator = GraphEmbeddingSimilarity(embedding_dim=50)
 
     try:
-        kea_sim, _, _ = calculate_similarity(triples1, triples2)
+        kea_sim, _, _ = calculate_kea_similarity(triples1, triples2)
         scores['kea_similarity'] = kea_sim
     except Exception:
         pass
 
     try:
-        composite = calculate_composite_similarity(triples1, triples2, alpha=0.1, sigma=1.0)
+        composite = calculate_kea_composite_similarity(triples1, triples2, alpha=0.1, sigma=1.0)
         scores['kea_composite']  = composite['composite']
         scores['kea_structural'] = composite['structural']
         scores['kea_semantic']   = composite['semantic']
@@ -104,7 +104,7 @@ def compute_row(triples1, triples2):
         pass
 
     try:
-        scores['wl_kernel_similarity'] = calculate_pure_wl_kernel_similarity(triples1, triples2)
+        scores['wl_kernel_similarity'] = calculate_wl_kernel_similarity(triples1, triples2)
     except Exception:
         pass
 
@@ -119,7 +119,7 @@ def compute_row(triples1, triples2):
         pass
 
     try:
-        scores['snea_bert_similarity'] = calculate_enhanced_aa_kea_similarity_score(triples1, triples2)
+        scores['snea_bert_similarity'] = calculate_snea_sbert_similarity_score(triples1, triples2)
     except Exception:
         pass
 

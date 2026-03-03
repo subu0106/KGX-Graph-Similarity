@@ -616,6 +616,6 @@ def calculate_kea_bert_with_attention(kg1_triples, kg2_triples, use_neural_atten
     return detailed_metrics
 
 
-def calculate_similarity(kg1_triples, kg2_triples):
-    """Compatibility wrapper that returns just the F1 score"""
+def calculate_kea_bert_similarity_score(kg1_triples, kg2_triples):
+    """Wrapper returning just the F1 score as a float."""
     return calculate_kea_bert_similarity(kg1_triples, kg2_triples, return_detailed=False)

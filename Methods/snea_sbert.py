@@ -184,7 +184,7 @@ def _sbert_mean_cosine(kg1_triples, kg2_triples):
 # Main similarity function
 # ---------------------------------------------------------------------------
 
-def calculate_enhanced_aa_kea_similarity(kg1_triples, kg2_triples, alpha=ALPHA):
+def calculate_snea_sbert_similarity(kg1_triples, kg2_triples, alpha=ALPHA):
     """
     Compute similarity between two KGs using the SNEA-SBERT method.
 
@@ -282,12 +282,12 @@ def calculate_enhanced_aa_kea_similarity(kg1_triples, kg2_triples, alpha=ALPHA):
     return similarity, debug_info
 
 
-def calculate_enhanced_aa_kea_similarity_score(kg1_triples, kg2_triples):
+def calculate_snea_sbert_similarity_score(kg1_triples, kg2_triples):
     """
     Drop-in replacement for calculate_aa_kea_similarity() in aa_kea.py.
     Returns just the blended similarity score as a float in [0, 1].
     """
-    score, _ = calculate_enhanced_aa_kea_similarity(kg1_triples, kg2_triples)
+    score, _ = calculate_snea_sbert_similarity(kg1_triples, kg2_triples)
     return score
 
 
@@ -312,7 +312,7 @@ if __name__ == '__main__':
         ['Marie Curie', 'received', 'Nobel Prize in Physics'],
         ['Marie Curie', 'was awarded', 'Nobel Prize in Chemistry'],
     ]
-    sim, info = calculate_enhanced_aa_kea_similarity(kg1, kg2_similar)
+    sim, info = calculate_snea_sbert_similarity(kg1, kg2_similar)
     print(f'\nTest 1 — Similar graphs, different wording')
     print(f'  WL score    : {info["wl_score"]:.4f}')
     print(f'  SBERT score : {info["sbert_score"]:.4f}')
@@ -323,14 +323,14 @@ if __name__ == '__main__':
         ['Albert Einstein', 'developed', 'Theory of Relativity'],
         ['Albert Einstein', 'won', 'Nobel Prize in Physics'],
     ]
-    sim2, info2 = calculate_enhanced_aa_kea_similarity(kg1, kg3_different)
+    sim2, info2 = calculate_snea_sbert_similarity(kg1, kg3_different)
     print(f'\nTest 2 — Different graphs')
     print(f'  WL score    : {info2["wl_score"]:.4f}')
     print(f'  SBERT score : {info2["sbert_score"]:.4f}')
     print(f'  Blended     : {sim2:.4f}')
 
     # Test 3: Identical graphs
-    sim3, info3 = calculate_enhanced_aa_kea_similarity(kg1, kg1)
+    sim3, info3 = calculate_snea_sbert_similarity(kg1, kg1)
     print(f'\nTest 3 — Identical graphs')
     print(f'  WL score    : {info3["wl_score"]:.4f}')
     print(f'  SBERT score : {info3["sbert_score"]:.4f}')

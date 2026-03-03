@@ -27,13 +27,13 @@ import gc
 
 # Import from Methods package
 from Methods import (
-    calculate_similarity,
-    calculate_composite_similarity,
+    calculate_kea_similarity,
+    calculate_kea_composite_similarity,
     calculate_aa_kea_similarity,
-    calculate_pure_wl_kernel_similarity,
+    calculate_wl_kernel_similarity,
     GraphEmbeddingSimilarity,
     calculate_kea_bert_similarity,
-    calculate_enhanced_aa_kea_similarity_score,
+    calculate_snea_sbert_similarity_score,
     calculate_semantic_wl_similarity_score,
     calculate_snea_similarity_score,
 )
@@ -122,14 +122,14 @@ def process_dataset(input_file, output_file):
 
                 # 1. KEA method
                 try:
-                    kea_sim, _, _ = calculate_similarity(triples1, triples2)
+                    kea_sim, _, _ = calculate_kea_similarity(triples1, triples2)
                     result['kea_similarity'] = kea_sim
                 except Exception:
                     result['kea_similarity'] = None
 
                 # 2. KEA Composite
                 try:
-                    composite_result = calculate_composite_similarity(triples1, triples2, alpha=0.1, sigma=1.0)
+                    composite_result = calculate_kea_composite_similarity(triples1, triples2, alpha=0.1, sigma=1.0)
                     result['kea_composite'] = composite_result['composite']
                     result['kea_structural'] = composite_result['structural']
                     result['kea_semantic'] = composite_result['semantic']
@@ -152,7 +152,7 @@ def process_dataset(input_file, output_file):
 
                 # 5. Pure WL Kernel
                 try:
-                    result['wl_kernel_similarity'] = calculate_pure_wl_kernel_similarity(triples1, triples2)
+                    result['wl_kernel_similarity'] = calculate_wl_kernel_similarity(triples1, triples2)
                 except Exception:
                     result['wl_kernel_similarity'] = None
 
@@ -170,7 +170,7 @@ def process_dataset(input_file, output_file):
 
                 # 9. SNEA-SBERT (SNEA + SBERT mean-pool blend, alpha=0.5)
                 try:
-                    result['snea_bert_similarity'] = calculate_enhanced_aa_kea_similarity_score(triples1, triples2)
+                    result['snea_bert_similarity'] = calculate_snea_sbert_similarity_score(triples1, triples2)
                 except Exception:
                     result['snea_bert_similarity'] = None
 

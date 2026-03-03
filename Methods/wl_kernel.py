@@ -8,7 +8,7 @@ from grakel import Graph
 from grakel.kernels import WeisfeilerLehman
 
 
-def calculate_pure_wl_kernel_similarity(triples1, triples2):
+def calculate_wl_kernel_similarity(triples1, triples2):
     """Calculate pure WL kernel similarity (structural only, no semantic clustering)"""
 
     def create_networkx_graph(triple_list):
