@@ -119,7 +119,7 @@ class GraphEmbeddingSimilarity:
         emb2 = self.get_graph_embedding(model, triples2)
 
         similarity = cosine_similarity([emb1], [emb2])[0][0]
-        return float(similarity)
+        return float(np.clip(similarity, 0.0, 1.0))
 
     def calculate_rotate_similarity(self, triples1, triples2):
         """Calculate similarity using RotatE embeddings"""
@@ -142,4 +142,4 @@ class GraphEmbeddingSimilarity:
         emb2 = self.get_graph_embedding(model, triples2)
 
         similarity = cosine_similarity([emb1], [emb2])[0][0]
-        return float(similarity)
+        return float(np.clip(similarity, 0.0, 1.0))

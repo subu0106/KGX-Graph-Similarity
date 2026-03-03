@@ -21,7 +21,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from scipy import stats
 
 INPUT_FILE  = "data/semantic_kg_transformed.csv"
-OUTPUT_FILE = "results/semantic_kg_eval/all_methods_results.csv"
+OUTPUT_FILE = "results/final_analysis_semantic_kg/all_methods_results.csv"
 
 METHODS = [
     'kea_similarity',
@@ -30,7 +30,7 @@ METHODS = [
     'wl_kernel_similarity',
     'snea_similarity',
     'aa_kea_similarity',
-    'enhanced_aa_kea_similarity',
+    'snea_bert_similarity',
     'kea_bert_similarity',
     'semantic_wl_similarity',
 ]
@@ -119,7 +119,7 @@ def compute_row(triples1, triples2):
         pass
 
     try:
-        scores['enhanced_aa_kea_similarity'] = calculate_enhanced_aa_kea_similarity_score(triples1, triples2)
+        scores['snea_bert_similarity'] = calculate_enhanced_aa_kea_similarity_score(triples1, triples2)
     except Exception:
         pass
 

@@ -243,9 +243,9 @@ def calculate_enhanced_aa_kea_similarity(kg1_triples, kg2_triples, alpha=ALPHA):
     kg2_grakel = convert_to_grakel_graph(relabeled_kg2)
 
     if kg1_grakel is None or kg2_grakel is None:
-        # No edges — fall back to SBERT only
-        sbert_score = _sbert_mean_cosine(kg1_triples, filtered_kg2)
-        return float(np.clip(sbert_score, 0.0, 1.0)), {
+        # No edges — fall back to SBERT only (clipped to [0, 1])
+        sbert_score = float(np.clip(_sbert_mean_cosine(kg1_triples, filtered_kg2), 0.0, 1.0))
+        return sbert_score, {
             'wl_score': None,
             'sbert_score': sbert_score,
             'blended_score': sbert_score,
@@ -260,15 +260,16 @@ def calculate_enhanced_aa_kea_similarity(kg1_triples, kg2_triples, alpha=ALPHA):
         wl_score = 0.0
 
     # -- Step 4: SBERT mean-pool cosine similarity --
-    sbert_score = _sbert_mean_cosine(kg1_triples, filtered_kg2)
+    sbert_score         = _sbert_mean_cosine(kg1_triples, filtered_kg2)
+    sbert_score_clipped = float(np.clip(sbert_score, 0.0, 1.0))
 
-    # -- Step 5: Blend --
-    blended = alpha * wl_score + (1.0 - alpha) * sbert_score
-    similarity = float(np.clip(blended, 0.0, 1.0))
+    # -- Step 5: Blend — score = α * wl_score + (1 - α) * sbert_score_clipped --
+    similarity = float(alpha * wl_score + (1.0 - alpha) * sbert_score_clipped)
 
     debug_info = {
         'wl_score': wl_score,
-        'sbert_score': sbert_score,
+        'sbert_score_raw': sbert_score,
+        'sbert_score_clipped': sbert_score_clipped,
         'blended_score': similarity,
         'alpha': alpha,
         'kg1_nodes': len(kg1_graph.nodes()),

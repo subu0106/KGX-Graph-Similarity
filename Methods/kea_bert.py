@@ -460,7 +460,7 @@ def calculate_kea_bert_similarity(kg1_triples, kg2_triples, return_detailed=Fals
     final_f1 = graph_weight * graph_metrics['overall_f1'] + triple_weight * triple_f1
 
     if not return_detailed:
-        return float(final_f1)
+        return float(np.clip(final_f1, 0.0, 1.0))
 
     # Return detailed metrics
     detailed_metrics = {
@@ -589,7 +589,7 @@ def calculate_kea_bert_with_attention(kg1_triples, kg2_triples, use_neural_atten
     final_f1 = graph_weight * graph_metrics['overall_f1'] + triple_weight * triple_f1
 
     if not return_detailed:
-        return float(final_f1)
+        return float(np.clip(final_f1, 0.0, 1.0))
 
     # Return detailed metrics
     detailed_metrics = {

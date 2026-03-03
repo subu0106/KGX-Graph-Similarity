@@ -27,11 +27,11 @@ METHODS = [
     # 'kea_structural',
     # 'kea_semantic',
     'transe_similarity',
-    # 'rotate_similarity',
+    'rotate_similarity',
     'wl_kernel_similarity',
     'snea_similarity',
     'aa_kea_similarity',
-    'enhanced_aa_kea_similarity',
+    'snea_bert_similarity',
     'kea_bert_similarity',
     'semantic_wl_similarity',
 ]
@@ -46,7 +46,7 @@ COLORS = {
     'wl_kernel_similarity': '#6A994E',
     'snea_similarity':      '#27AE60',
     'aa_kea_similarity':          '#9B59B6',
-    'enhanced_aa_kea_similarity': '#1ABC9C',
+    'snea_bert_similarity': '#1ABC9C',
     'kea_bert_similarity':        '#E67E22',
     'semantic_wl_similarity':     '#C0392B',
 }
@@ -536,13 +536,27 @@ def variance_check(df, out_dir):
 
 
 def plot_ranking_table(metrics, out_dir):
-    valid = metrics.dropna(subset=['pearson_r']).copy()
-    valid = valid.sort_values('pearson_r', ascending=False)
+    valid = metrics.dropna(subset=['pearson_r', 'spearman_r', 'mae', 'rmse']).copy()
 
-    headers   = ['Method', 'Pearson r', 'Spearman r', 'MAE', 'RMSE']
+    # Composite rank: average rank across all four metrics
+    # Higher Pearson/Spearman = better (ascending=False → rank 1 = highest)
+    # Lower MAE/RMSE = better (ascending=True → rank 1 = lowest)
+    valid['rank_pearson']  = valid['pearson_r'].rank(ascending=False)
+    valid['rank_spearman'] = valid['spearman_r'].rank(ascending=False)
+    valid['rank_mae']      = valid['mae'].rank(ascending=True)
+    valid['rank_rmse']     = valid['rmse'].rank(ascending=True)
+    valid['composite_rank'] = (
+        valid['rank_pearson'] + valid['rank_spearman'] +
+        valid['rank_mae']    + valid['rank_rmse']
+    ) / 4.0
+
+    valid = valid.sort_values('composite_rank', ascending=True)
+
+    headers   = ['Rank', 'Method', 'Pearson r', 'Spearman r', 'MAE', 'RMSE']
     cell_data = []
-    for _, row in valid.iterrows():
+    for position, (_, row) in enumerate(valid.iterrows(), start=1):
         cell_data.append([
+            str(position),
             row['method'],
             f"{row['pearson_r']:.4f}",
             f"{row['spearman_r']:.4f}",
@@ -550,18 +564,17 @@ def plot_ranking_table(metrics, out_dir):
             f"{row['rmse']:.4f}",
         ])
 
-    # Find row index of max per numeric column (best = max pearson/spearman, min mae/rmse)
+    # Best value per numeric column (cols 2-5)
     best_col = {
-        1: valid['pearson_r'].idxmax(),
-        2: valid['spearman_r'].idxmax(),
-        3: valid['mae'].idxmin(),
-        4: valid['rmse'].idxmin(),
+        2: valid['pearson_r'].idxmax(),
+        3: valid['spearman_r'].idxmax(),
+        4: valid['mae'].idxmin(),
+        5: valid['rmse'].idxmin(),
     }
-    # Map pandas index → table row index (1-based, row 0 is header)
     idx_to_row = {idx: ri + 1 for ri, idx in enumerate(valid.index)}
 
     nr = len(cell_data)
-    fig, ax = plt.subplots(figsize=(12, 0.55 * nr + 1.8))
+    fig, ax = plt.subplots(figsize=(14, 0.55 * nr + 1.8))
     ax.axis('off')
     tbl = ax.table(cellText=cell_data, colLabels=headers,
                    cellLoc='center', loc='center')
@@ -580,22 +593,25 @@ def plot_ranking_table(metrics, out_dir):
         for col in range(len(headers)):
             tbl[ri, col].set_facecolor(bg)
 
-    # Bold the best value per column
+    # Bold the best value per metric column
     for col, best_idx in best_col.items():
         ri = idx_to_row[best_idx]
         tbl[ri, col].set_text_props(fontweight='bold')
 
-    plt.title('Method Comparison  (Bold = Best value per metric)',
-              fontsize=11, fontweight='bold', pad=12)
+    plt.title(
+        'Method Ranking',
+        fontsize=11, fontweight='bold', pad=12,
+    )
     plt.tight_layout()
     _save(fig, out_dir, 'ranking_table.png')
 
     best = valid.iloc[0]
-    print(f"\nBEST METHOD (by Pearson r): {best['method']}")
-    print(f"  Pearson r  = {best['pearson_r']:.4f}")
-    print(f"  Spearman r = {best['spearman_r']:.4f}")
-    print(f"  MAE        = {best['mae']:.4f}")
-    print(f"  RMSE       = {best['rmse']:.4f}\n")
+    print(f"\nBEST METHOD (composite rank): {best['method']}")
+    print(f"  Composite rank = {best['composite_rank']:.2f}")
+    print(f"  Pearson r      = {best['pearson_r']:.4f}")
+    print(f"  Spearman r     = {best['spearman_r']:.4f}")
+    print(f"  MAE            = {best['mae']:.4f}")
+    print(f"  RMSE           = {best['rmse']:.4f}\n")
 
 
 

@@ -265,11 +265,11 @@ def calculate_gnn_similarity_with_info(
     if emb1 is None or emb2 is None:
         return 0.0, {"error": "could not encode one or both KGs"}
 
-    # Cosine similarity ∈ [-1, 1]  →  map to [0, 1]
+    # Cosine similarity ∈ [-1, 1]  →  clip to [0, 1]
     e1 = F.normalize(emb1.unsqueeze(0), p=2, dim=1)
     e2 = F.normalize(emb2.unsqueeze(0), p=2, dim=1)
     cosine_raw = torch.mm(e1, e2.t()).item()
-    similarity = (cosine_raw + 1.0) / 2.0
+    similarity = float(np.clip(cosine_raw, 0.0, 1.0))
 
     # Build PyG Data again just to count nodes/edges for debug info
     d1 = _triples_to_pyg(kg1_triples, sbert)

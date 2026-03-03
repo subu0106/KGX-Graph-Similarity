@@ -551,7 +551,7 @@ def calculate_semantic_wl_similarity(kg1_triples: List[List[str]],
     debug_info = {k: v for k, v in result.items()
                   if k not in ('graph1_embedding', 'graph2_embedding',
                                'graph1_labels', 'graph2_labels')}
-    return result['similarity'], debug_info
+    return float(np.clip(result['similarity'], 0.0, 1.0)), debug_info
 
 
 def calculate_semantic_wl_similarity_score(kg1_triples: List[List[str]],
