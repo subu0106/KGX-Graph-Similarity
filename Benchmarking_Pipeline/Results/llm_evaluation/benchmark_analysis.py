@@ -134,6 +134,18 @@ def print_summary_table(summary, metric='gold_similarity'):
               f"{r['min']:>7.4f}  {r['max']:>7.4f}")
 
 
+def _print_table(rows, cols, title):
+    print(f'\n{title}')
+    widths = [max(len(str(cols[i])), max((len(str(r[i])) for r in rows), default=0))
+              for i in range(len(cols))]
+    sep = '  '.join('-' * w for w in widths)
+    header = '  '.join(str(cols[i]).ljust(widths[i]) for i in range(len(cols)))
+    print(header)
+    print(sep)
+    for row in rows:
+        print('  '.join(str(row[i]).ljust(widths[i]) for i in range(len(cols))))
+
+
 def _table_figure(rows, cols, title, filename, figsize=None):
     h = 0.15 * (len(rows) + 1) + 0.6
     fig, ax = plt.subplots(figsize=figsize or (14, h))
@@ -190,11 +202,13 @@ def plot_summary_stats(records):
             'Max (%)', 'Min (%)', 'Perfect (≈1.0)', 'High (≥0.8)']
 
     gold_rows = _summary_rows(records, 'gold_similarity')
+    _print_table(gold_rows, cols, 'Statistics of Gold Similarity')
     _table_figure(gold_rows, cols,
                   'Statistics of Gold Similarity',
                   '0a_summary_gold.png', figsize=(20, 0.45 * (len(gold_rows) + 1) + 0.6))
 
     ctx_rows = _summary_rows(records, 'context_similarity')
+    _print_table(ctx_rows, cols, 'Statistics of Context Similarity')
     _table_figure(ctx_rows, cols,
                   'Statistics of Context Similarity',
                   '0b_summary_context.png', figsize=(20, 0.45 * (len(ctx_rows) + 1) + 0.6))
@@ -274,6 +288,7 @@ def plot_primary_table(records):
         rows.append(row)
 
     cols = ['Model'] + [f'{d} {m}' for d in DATASETS for m in ['GoldSim', 'ContextSim']]
+    _print_table(rows, cols, 'Primary Benchmark Table — Mean Similarity Score per Model per Dataset')
     _table_figure(rows, cols,
                   'Primary Benchmark Table — Mean Similarity Score per Model per Dataset',
                   '2_primary_table.png')
@@ -299,7 +314,8 @@ def plot_cus_table(records):
 
     rows.sort(key=lambda r: (r[0], -float(r[4])))
     
-    cols = [ 'Dataset', 'Model', 'Gold Sim', 'Context Sim', 'CUS (F1)']
+    cols = ['Dataset', 'Model', 'Gold Sim', 'Context Sim', 'CUS (F1)']
+    _print_table(rows, cols, 'Contextual Understanding Score (CUS) Leaderboard')
     _table_figure(rows, cols,
                   'Contextual Understanding Score',
                   '3_cus_leaderboard.png')
@@ -400,6 +416,7 @@ def plot_winrate(records):
                          f'{win1/n:.3f}', f'{win2/n:.3f}', f'{tie/n:.3f}', str(n)])
 
     cols = ['Dataset', 'Model A', 'Model B', 'Win Rate A', 'Win Rate B', 'Tie Rate', 'N']
+    _print_table(rows, cols, 'Pairwise Win-Rate — Gold Similarity')
     _table_figure(rows, cols, 'Pairwise Win-Rate — Gold Similarity', '6_winrate.png')
 
 
@@ -462,6 +479,7 @@ def plot_distributions(records):
                                f'{arr.std():.4f}',  f'{arr.min():.4f}',
                                f'{arr.max():.4f}',  str(len(arr))])
     cols = ['Dataset', 'Model', 'Mean', 'Median', 'Std', 'Min', 'Max', 'N']
+    _print_table(stat_rows, cols, 'Distribution Summary Statistics — Gold Similarity')
     _table_figure(stat_rows, cols, 'Distribution Summary Statistics — Gold Similarity',
                   '7_distribution_stats.png')
     print('Saved: 7_distribution_*.png')
@@ -533,6 +551,8 @@ def plot_significance(records):
 
     cols = ['Dataset', 'Model A', 'Model B', 'Mean A', 'Mean B',
             'Wilcoxon p', 'Mann-Whitney p']
+    _print_table(rows, cols,
+                 'Statistical Significance Tests  (*** p<0.001  ** p<0.01  * p<0.05  ns)')
     _table_figure(rows, cols,
                   'Statistical Significance Tests\n'
                   '*** p<0.001  ** p<0.01  * p<0.05  ns = not significant',

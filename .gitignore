@@ -17,6 +17,8 @@ results/semantic_kg_eval/with_enhanced_aa_similarity_final_analysis
 METHODS.md
 results/semantic_kg_eval/with_all_methods
 Benchmarking_Pipeline/Results/llm_evaluation/benchmark_plots
+main.tex
+
 
 # Model files
 *.pt
