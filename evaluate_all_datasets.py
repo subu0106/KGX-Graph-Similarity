@@ -7,8 +7,10 @@ Output CSV columns: above + all method score columns
 
 Methods:
   kea_similarity, transe_similarity, rotate_similarity, wl_kernel_similarity,
-  snea_similarity, aa_kea_similarity, kea_bert_similarity, semantic_wl_similarity,
+  aa_kea_similarity, kea_bert_similarity, semantic_wl_similarity,
   snea_bert_alpha_0.0 .. snea_bert_alpha_1.0  (one column per alpha value)
+
+Note: snea_bert_alpha_1.0 == snea_similarity (pure WL kernel, no SBERT blend)
 
 Usage:
   Process every dataset under Benchmarking_Pipeline/Data/ (default):
@@ -39,14 +41,17 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 
 SNEA_BERT_ALPHAS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
+# Column name for each alpha; 1.0 is labelled to clarify it is pure SNEA (WL only)
+SNEA_BERT_ALPHA_NAMES = {a: f'snea_bert_alpha_{a}' for a in SNEA_BERT_ALPHAS}
+SNEA_BERT_ALPHA_NAMES[1.0] = 'snea_bert_alpha_1.0_SNEA_alone'
+
 METHODS = [
     'kea_similarity',
     'transe_similarity',
     'rotate_similarity',
     'wl_kernel_similarity',
-    'snea_similarity',
     'aa_kea_similarity',
-    *[f'snea_bert_alpha_{a}' for a in SNEA_BERT_ALPHAS],
+    *[SNEA_BERT_ALPHA_NAMES[a] for a in SNEA_BERT_ALPHAS],
     'kea_bert_similarity',
     'semantic_wl_similarity',
 ]
@@ -76,7 +81,6 @@ def _compute_scores(kg1, kg2, active_methods):
     from Methods import (
         calculate_kea_similarity,
         calculate_wl_kernel_similarity,
-        calculate_snea_similarity_score,
         calculate_aa_kea_similarity,
         calculate_snea_sbert_similarity,
         calculate_kea_bert_similarity_score,
@@ -84,12 +88,13 @@ def _compute_scores(kg1, kg2, active_methods):
         GraphEmbeddingSimilarity,
     )
 
-    scores = {m: None for m in active_methods}
+    active_set = set(active_methods)
+    scores = {m: None for m in active_set}
 
     if not kg1 or not kg2:
         return scores
 
-    if 'kea_similarity' in active_methods:
+    if 'kea_similarity' in active_set:
         try:
             result = calculate_kea_similarity(kg1, kg2)
             scores['kea_similarity'] = result[0] if isinstance(result, tuple) else result
@@ -97,15 +102,15 @@ def _compute_scores(kg1, kg2, active_methods):
             pass
 
     # TransE and RotatE share one embedding calculator
-    if 'transe_similarity' in active_methods or 'rotate_similarity' in active_methods:
+    if 'transe_similarity' in active_set or 'rotate_similarity' in active_set:
         try:
             emb = GraphEmbeddingSimilarity(embedding_dim=50)
-            if 'transe_similarity' in active_methods:
+            if 'transe_similarity' in active_set:
                 try:
                     scores['transe_similarity'] = emb.calculate_transe_similarity(kg1, kg2)
                 except Exception:
                     pass
-            if 'rotate_similarity' in active_methods:
+            if 'rotate_similarity' in active_set:
                 try:
                     scores['rotate_similarity'] = emb.calculate_rotate_similarity(kg1, kg2)
                 except Exception:
@@ -114,40 +119,43 @@ def _compute_scores(kg1, kg2, active_methods):
         except Exception:
             pass
 
-    if 'wl_kernel_similarity' in active_methods:
+    if 'wl_kernel_similarity' in active_set:
         try:
             scores['wl_kernel_similarity'] = calculate_wl_kernel_similarity(kg1, kg2)
         except Exception:
             pass
 
-    if 'snea_similarity' in active_methods:
-        try:
-            scores['snea_similarity'] = calculate_snea_similarity_score(kg1, kg2)
-        except Exception:
-            pass
-
-    if 'aa_kea_similarity' in active_methods:
+    if 'aa_kea_similarity' in active_set:
         try:
             scores['aa_kea_similarity'] = calculate_aa_kea_similarity(kg1, kg2)
         except Exception:
             pass
 
-    for a in SNEA_BERT_ALPHAS:
-        col = f'snea_bert_alpha_{a}'
-        if col in active_methods:
-            try:
-                sim, _ = calculate_snea_sbert_similarity(kg1, kg2, alpha=a)
-                scores[col] = sim
-            except Exception:
-                pass
+    # Compute wl_score and sbert_score_clipped once, then blend for each alpha
+    if any(SNEA_BERT_ALPHA_NAMES[a] in active_set for a in SNEA_BERT_ALPHAS):
+        try:
+            _, debug = calculate_snea_sbert_similarity(kg1, kg2)
+            wl_score    = debug.get('wl_score')
+            sbert_score = debug.get('sbert_score_clipped')
+            for a in SNEA_BERT_ALPHAS:
+                col = SNEA_BERT_ALPHA_NAMES[a]
+                if col not in active_set:
+                    continue
+                if wl_score is not None and sbert_score is not None:
+                    scores[col] = float(a * wl_score + (1.0 - a) * sbert_score)
+                else:
+                    # WL was skipped (empty graph) — use sbert-only score
+                    scores[col] = debug.get('sbert_score', debug.get('blended_score'))
+        except Exception:
+            pass
 
-    if 'kea_bert_similarity' in active_methods:
+    if 'kea_bert_similarity' in active_set:
         try:
             scores['kea_bert_similarity'] = calculate_kea_bert_similarity_score(kg1, kg2)
         except Exception:
             pass
 
-    if 'semantic_wl_similarity' in active_methods:
+    if 'semantic_wl_similarity' in active_set:
         try:
             scores['semantic_wl_similarity'] = calculate_semantic_wl_similarity_score(kg1, kg2)
         except Exception:
