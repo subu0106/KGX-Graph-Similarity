@@ -7,8 +7,8 @@ Output CSV columns: above + all method score columns
 
 Methods:
   kea_similarity, transe_similarity, rotate_similarity, wl_kernel_similarity,
-  snea_similarity, aa_kea_similarity, snea_bert_similarity, kea_bert_similarity,
-  semantic_wl_similarity
+  snea_similarity, aa_kea_similarity, kea_bert_similarity, semantic_wl_similarity,
+  snea_bert_alpha_0.0 .. snea_bert_alpha_1.0  (one column per alpha value)
 
 Usage:
   Process every dataset under Benchmarking_Pipeline/Data/ (default):
@@ -37,6 +37,8 @@ import argparse
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
+SNEA_BERT_ALPHAS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+
 METHODS = [
     'kea_similarity',
     'transe_similarity',
@@ -44,7 +46,7 @@ METHODS = [
     'wl_kernel_similarity',
     'snea_similarity',
     'aa_kea_similarity',
-    'snea_bert_similarity',
+    *[f'snea_bert_alpha_{a}' for a in SNEA_BERT_ALPHAS],
     'kea_bert_similarity',
     'semantic_wl_similarity',
 ]
@@ -76,7 +78,7 @@ def _compute_scores(kg1, kg2, active_methods):
         calculate_wl_kernel_similarity,
         calculate_snea_similarity_score,
         calculate_aa_kea_similarity,
-        calculate_snea_sbert_similarity_score,
+        calculate_snea_sbert_similarity,
         calculate_kea_bert_similarity_score,
         calculate_semantic_wl_similarity_score,
         GraphEmbeddingSimilarity,
@@ -130,11 +132,14 @@ def _compute_scores(kg1, kg2, active_methods):
         except Exception:
             pass
 
-    if 'snea_bert_similarity' in active_methods:
-        try:
-            scores['snea_bert_similarity'] = calculate_snea_sbert_similarity_score(kg1, kg2)
-        except Exception:
-            pass
+    for a in SNEA_BERT_ALPHAS:
+        col = f'snea_bert_alpha_{a}'
+        if col in active_methods:
+            try:
+                sim, _ = calculate_snea_sbert_similarity(kg1, kg2, alpha=a)
+                scores[col] = sim
+            except Exception:
+                pass
 
     if 'kea_bert_similarity' in active_methods:
         try:
@@ -304,7 +309,7 @@ def main():
                         help='Output path for single-file mode')
     parser.add_argument('--methods',     nargs='+', default=None, choices=METHODS,
                         metavar='METHOD',
-                        help=f'Subset of methods to run. Choices: {", ".join(METHODS)}')
+                        help='Subset of methods to run (default: all)')
     parser.add_argument('--limit',       type=int, default=None,
                         help='Max rows per dataset (for quick testing)')
     parser.add_argument('--multiprocessing', action='store_true', default=False,
