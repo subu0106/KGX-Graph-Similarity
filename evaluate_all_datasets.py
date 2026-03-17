@@ -39,6 +39,19 @@ import argparse
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
+# Methods are imported once here so all SBERT models load a single time at
+# startup, before any dataset loop begins.  Workers that use multiprocessing
+# still re-import inside _compute_scores via the lazy-import path below.
+from Methods import (
+    calculate_kea_similarity,
+    calculate_wl_kernel_similarity,
+    calculate_aa_kea_similarity,
+    calculate_snea_sbert_similarity,
+    calculate_kea_bert_similarity_score,
+    calculate_semantic_wl_similarity_score,
+    GraphEmbeddingSimilarity,
+)
+
 SNEA_BERT_ALPHAS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
 # Column name for each alpha; 1.0 is labelled to clarify it is pure SNEA (WL only)
@@ -75,19 +88,8 @@ def parse_triples(kg_str):
 def _compute_scores(kg1, kg2, active_methods):
     """
     Run each active method on one KG pair.
-    Imports live here so spawned workers load SBERT once into their own context.
     Returns dict {method: float | None}.
     """
-    from Methods import (
-        calculate_kea_similarity,
-        calculate_wl_kernel_similarity,
-        calculate_aa_kea_similarity,
-        calculate_snea_sbert_similarity,
-        calculate_kea_bert_similarity_score,
-        calculate_semantic_wl_similarity_score,
-        GraphEmbeddingSimilarity,
-    )
-
     active_set = set(active_methods)
     scores = {m: None for m in active_set}
 
@@ -165,7 +167,22 @@ def _compute_scores(kg1, kg2, active_methods):
 
 
 def _process_batch(batch_data):
-    """Worker: receives (list[row_dict], active_methods). Returns list[result_dict]."""
+    """Worker: receives (list[row_dict], active_methods). Returns list[result_dict].
+    Spawned processes start fresh so Methods must be re-imported here."""
+    # pylint: disable=import-outside-toplevel
+    global calculate_kea_similarity, calculate_wl_kernel_similarity
+    global calculate_aa_kea_similarity, calculate_snea_sbert_similarity
+    global calculate_kea_bert_similarity_score, calculate_semantic_wl_similarity_score
+    global GraphEmbeddingSimilarity
+    from Methods import (
+        calculate_kea_similarity,
+        calculate_wl_kernel_similarity,
+        calculate_aa_kea_similarity,
+        calculate_snea_sbert_similarity,
+        calculate_kea_bert_similarity_score,
+        calculate_semantic_wl_similarity_score,
+        GraphEmbeddingSimilarity,
+    )
     rows, active_methods = batch_data
     results = []
     for row in rows:
