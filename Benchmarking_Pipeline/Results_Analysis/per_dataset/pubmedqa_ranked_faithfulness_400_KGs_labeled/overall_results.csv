@@ -1,0 +1,19 @@
+method,col,threshold,accuracy,precision,recall,f1,roc_auc,n
+KEA,kea_similarity,0.5,0.3057644110275689,0.0,0.0,0.0,,399
+TransE,transe_similarity,0.5,0.37343358395989973,0.0,0.0,0.0,,399
+KEA-BERT,kea_bert_similarity,0.5,0.2506265664160401,0.0,0.0,0.0,,399
+SNEA (WL only),snea_bert_alpha_1.0_SNEA_alone,0.5,0.2857142857142857,0.0,0.0,0.0,,399
+SNEA-SBERT α=0.9,snea_bert_alpha_0.9,0.5,0.2756892230576441,0.0,0.0,0.0,,399
+SNEA-SBERT α=0.8,snea_bert_alpha_0.8,0.5,0.2656641604010025,0.0,0.0,0.0,,399
+SNEA-SBERT α=0.7,snea_bert_alpha_0.7,0.5,0.2606516290726817,0.0,0.0,0.0,,399
+SNEA-SBERT α=0.6,snea_bert_alpha_0.6,0.5,0.2531328320802005,0.0,0.0,0.0,,399
+SNEA-SBERT α=0.5,snea_bert_alpha_0.5,0.5,0.2506265664160401,0.0,0.0,0.0,,399
+SNEA-SBERT α=0.4,snea_bert_alpha_0.4,0.5,0.2506265664160401,0.0,0.0,0.0,,399
+SNEA-SBERT α=0.3,snea_bert_alpha_0.3,0.5,0.2506265664160401,0.0,0.0,0.0,,399
+SNEA-SBERT α=0.2,snea_bert_alpha_0.2,0.5,0.2506265664160401,0.0,0.0,0.0,,399
+SNEA-SBERT α=0.1,snea_bert_alpha_0.1,0.5,0.24310776942355888,0.0,0.0,0.0,,399
+SNEA-SBERT α=0.0,snea_bert_alpha_0.0,0.5,0.22305764411027568,0.0,0.0,0.0,,399
+AA-KEA,aa_kea_similarity,0.5,0.2857142857142857,0.0,0.0,0.0,,399
+WL Kernel,wl_kernel_similarity,0.5,0.40852130325814534,0.0,0.0,0.0,,399
+RotatE,rotate_similarity,0.5,0.2807017543859649,0.0,0.0,0.0,,399
+Semantic WL,semantic_wl_similarity,0.5,0.15037593984962405,0.0,0.0,0.0,,399

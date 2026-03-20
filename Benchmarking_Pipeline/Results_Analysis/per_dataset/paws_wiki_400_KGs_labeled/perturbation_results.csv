@@ -1,0 +1,37 @@
+perturbation_type,method,f1,roc_auc,n_samples
+paraphrase,KEA,1.0,,193
+paraphrase,TransE,1.0,,193
+paraphrase,RotatE,1.0,,193
+paraphrase,WL Kernel,1.0,,193
+paraphrase,AA-KEA,1.0,,193
+paraphrase,SNEA-SBERT α=0.0,1.0,,193
+paraphrase,SNEA-SBERT α=0.1,1.0,,193
+paraphrase,SNEA-SBERT α=0.2,1.0,,193
+paraphrase,SNEA-SBERT α=0.3,1.0,,193
+paraphrase,SNEA-SBERT α=0.4,1.0,,193
+paraphrase,SNEA-SBERT α=0.5,1.0,,193
+paraphrase,SNEA-SBERT α=0.6,1.0,,193
+paraphrase,SNEA-SBERT α=0.7,1.0,,193
+paraphrase,SNEA-SBERT α=0.8,1.0,,193
+paraphrase,SNEA-SBERT α=0.9,1.0,,193
+paraphrase,SNEA (WL only),1.0,,193
+paraphrase,KEA-BERT,1.0,,193
+paraphrase,Semantic WL,1.0,,193
+non_paraphrase,KEA,0.0,,198
+non_paraphrase,TransE,0.0,,198
+non_paraphrase,RotatE,0.0,,198
+non_paraphrase,WL Kernel,0.0,,198
+non_paraphrase,AA-KEA,0.0,,198
+non_paraphrase,SNEA-SBERT α=0.0,0.0,,198
+non_paraphrase,SNEA-SBERT α=0.1,0.0,,198
+non_paraphrase,SNEA-SBERT α=0.2,0.0,,198
+non_paraphrase,SNEA-SBERT α=0.3,0.0,,198
+non_paraphrase,SNEA-SBERT α=0.4,0.0,,198
+non_paraphrase,SNEA-SBERT α=0.5,0.0,,198
+non_paraphrase,SNEA-SBERT α=0.6,0.0,,198
+non_paraphrase,SNEA-SBERT α=0.7,0.0,,198
+non_paraphrase,SNEA-SBERT α=0.8,0.0,,198
+non_paraphrase,SNEA-SBERT α=0.9,0.0,,198
+non_paraphrase,SNEA (WL only),0.0,,198
+non_paraphrase,KEA-BERT,0.0,,198
+non_paraphrase,Semantic WL,0.0,,198

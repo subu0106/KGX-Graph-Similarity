@@ -1,0 +1,91 @@
+perturbation_type,method,f1,roc_auc,n_samples
+faithful_paraphrase,KEA,0.0,,100
+faithful_paraphrase,TransE,0.0,,100
+faithful_paraphrase,RotatE,0.0,,100
+faithful_paraphrase,WL Kernel,0.0,,100
+faithful_paraphrase,AA-KEA,0.0,,100
+faithful_paraphrase,SNEA-SBERT α=0.0,0.0,,100
+faithful_paraphrase,SNEA-SBERT α=0.1,0.0,,100
+faithful_paraphrase,SNEA-SBERT α=0.2,0.0,,100
+faithful_paraphrase,SNEA-SBERT α=0.3,0.0,,100
+faithful_paraphrase,SNEA-SBERT α=0.4,0.0,,100
+faithful_paraphrase,SNEA-SBERT α=0.5,0.0,,100
+faithful_paraphrase,SNEA-SBERT α=0.6,0.0,,100
+faithful_paraphrase,SNEA-SBERT α=0.7,0.0,,100
+faithful_paraphrase,SNEA-SBERT α=0.8,0.0,,100
+faithful_paraphrase,SNEA-SBERT α=0.9,0.0,,100
+faithful_paraphrase,SNEA (WL only),0.0,,100
+faithful_paraphrase,KEA-BERT,0.0,,100
+faithful_paraphrase,Semantic WL,0.0,,100
+numerical_distortion,KEA,0.0,,36
+numerical_distortion,TransE,0.0,,36
+numerical_distortion,RotatE,0.0,,36
+numerical_distortion,WL Kernel,0.0,,36
+numerical_distortion,AA-KEA,0.0,,36
+numerical_distortion,SNEA-SBERT α=0.0,0.0,,36
+numerical_distortion,SNEA-SBERT α=0.1,0.0,,36
+numerical_distortion,SNEA-SBERT α=0.2,0.0,,36
+numerical_distortion,SNEA-SBERT α=0.3,0.0,,36
+numerical_distortion,SNEA-SBERT α=0.4,0.0,,36
+numerical_distortion,SNEA-SBERT α=0.5,0.0,,36
+numerical_distortion,SNEA-SBERT α=0.6,0.0,,36
+numerical_distortion,SNEA-SBERT α=0.7,0.0,,36
+numerical_distortion,SNEA-SBERT α=0.8,0.0,,36
+numerical_distortion,SNEA-SBERT α=0.9,0.0,,36
+numerical_distortion,SNEA (WL only),0.0,,36
+numerical_distortion,KEA-BERT,0.0,,36
+numerical_distortion,Semantic WL,0.0,,36
+relation_inversion,KEA,0.0,,100
+relation_inversion,TransE,0.0,,100
+relation_inversion,RotatE,0.0,,100
+relation_inversion,WL Kernel,0.0,,100
+relation_inversion,AA-KEA,0.0,,100
+relation_inversion,SNEA-SBERT α=0.0,0.0,,100
+relation_inversion,SNEA-SBERT α=0.1,0.0,,100
+relation_inversion,SNEA-SBERT α=0.2,0.0,,100
+relation_inversion,SNEA-SBERT α=0.3,0.0,,100
+relation_inversion,SNEA-SBERT α=0.4,0.0,,100
+relation_inversion,SNEA-SBERT α=0.5,0.0,,100
+relation_inversion,SNEA-SBERT α=0.6,0.0,,100
+relation_inversion,SNEA-SBERT α=0.7,0.0,,100
+relation_inversion,SNEA-SBERT α=0.8,0.0,,100
+relation_inversion,SNEA-SBERT α=0.9,0.0,,100
+relation_inversion,SNEA (WL only),0.0,,100
+relation_inversion,KEA-BERT,0.0,,100
+relation_inversion,Semantic WL,0.0,,100
+context_ignoring,KEA,0.0,,100
+context_ignoring,TransE,0.0,,100
+context_ignoring,RotatE,0.0,,100
+context_ignoring,WL Kernel,0.0,,100
+context_ignoring,AA-KEA,0.0,,100
+context_ignoring,SNEA-SBERT α=0.0,0.0,,100
+context_ignoring,SNEA-SBERT α=0.1,0.0,,100
+context_ignoring,SNEA-SBERT α=0.2,0.0,,100
+context_ignoring,SNEA-SBERT α=0.3,0.0,,100
+context_ignoring,SNEA-SBERT α=0.4,0.0,,100
+context_ignoring,SNEA-SBERT α=0.5,0.0,,100
+context_ignoring,SNEA-SBERT α=0.6,0.0,,100
+context_ignoring,SNEA-SBERT α=0.7,0.0,,100
+context_ignoring,SNEA-SBERT α=0.8,0.0,,100
+context_ignoring,SNEA-SBERT α=0.9,0.0,,100
+context_ignoring,SNEA (WL only),0.0,,100
+context_ignoring,KEA-BERT,0.0,,100
+context_ignoring,Semantic WL,0.0,,100
+entity_substitution,KEA,0.0,,63
+entity_substitution,TransE,0.0,,63
+entity_substitution,RotatE,0.0,,63
+entity_substitution,WL Kernel,0.0,,63
+entity_substitution,AA-KEA,0.0,,63
+entity_substitution,SNEA-SBERT α=0.0,0.0,,63
+entity_substitution,SNEA-SBERT α=0.1,0.0,,63
+entity_substitution,SNEA-SBERT α=0.2,0.0,,63
+entity_substitution,SNEA-SBERT α=0.3,0.0,,63
+entity_substitution,SNEA-SBERT α=0.4,0.0,,63
+entity_substitution,SNEA-SBERT α=0.5,0.0,,63
+entity_substitution,SNEA-SBERT α=0.6,0.0,,63
+entity_substitution,SNEA-SBERT α=0.7,0.0,,63
+entity_substitution,SNEA-SBERT α=0.8,0.0,,63
+entity_substitution,SNEA-SBERT α=0.9,0.0,,63
+entity_substitution,SNEA (WL only),0.0,,63
+entity_substitution,KEA-BERT,0.0,,63
+entity_substitution,Semantic WL,0.0,,63

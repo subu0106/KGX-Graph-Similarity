@@ -1,0 +1,91 @@
+perturbation_type,method,f1,roc_auc,n_samples
+edge_replacement,KEA,0.0,,50
+edge_replacement,TransE,0.0,,50
+edge_replacement,RotatE,0.0,,50
+edge_replacement,WL Kernel,0.0,,50
+edge_replacement,AA-KEA,0.0,,50
+edge_replacement,SNEA-SBERT α=0.0,0.0,,50
+edge_replacement,SNEA-SBERT α=0.1,0.0,,50
+edge_replacement,SNEA-SBERT α=0.2,0.0,,50
+edge_replacement,SNEA-SBERT α=0.3,0.0,,50
+edge_replacement,SNEA-SBERT α=0.4,0.0,,50
+edge_replacement,SNEA-SBERT α=0.5,0.0,,50
+edge_replacement,SNEA-SBERT α=0.6,0.0,,50
+edge_replacement,SNEA-SBERT α=0.7,0.0,,50
+edge_replacement,SNEA-SBERT α=0.8,0.0,,50
+edge_replacement,SNEA-SBERT α=0.9,0.0,,50
+edge_replacement,SNEA (WL only),0.0,,50
+edge_replacement,KEA-BERT,0.0,,50
+edge_replacement,Semantic WL,0.0,,50
+paraphrase,KEA,1.0,,199
+paraphrase,TransE,1.0,,199
+paraphrase,RotatE,1.0,,199
+paraphrase,WL Kernel,1.0,,199
+paraphrase,AA-KEA,1.0,,199
+paraphrase,SNEA-SBERT α=0.0,1.0,,199
+paraphrase,SNEA-SBERT α=0.1,1.0,,199
+paraphrase,SNEA-SBERT α=0.2,1.0,,199
+paraphrase,SNEA-SBERT α=0.3,1.0,,199
+paraphrase,SNEA-SBERT α=0.4,1.0,,199
+paraphrase,SNEA-SBERT α=0.5,1.0,,199
+paraphrase,SNEA-SBERT α=0.6,1.0,,199
+paraphrase,SNEA-SBERT α=0.7,1.0,,199
+paraphrase,SNEA-SBERT α=0.8,1.0,,199
+paraphrase,SNEA-SBERT α=0.9,1.0,,199
+paraphrase,SNEA (WL only),1.0,,199
+paraphrase,KEA-BERT,1.0,,199
+paraphrase,Semantic WL,1.0,,199
+edge_deletion,KEA,0.0,,48
+edge_deletion,TransE,0.0,,48
+edge_deletion,RotatE,0.0,,48
+edge_deletion,WL Kernel,0.0,,48
+edge_deletion,AA-KEA,0.0,,48
+edge_deletion,SNEA-SBERT α=0.0,0.0,,48
+edge_deletion,SNEA-SBERT α=0.1,0.0,,48
+edge_deletion,SNEA-SBERT α=0.2,0.0,,48
+edge_deletion,SNEA-SBERT α=0.3,0.0,,48
+edge_deletion,SNEA-SBERT α=0.4,0.0,,48
+edge_deletion,SNEA-SBERT α=0.5,0.0,,48
+edge_deletion,SNEA-SBERT α=0.6,0.0,,48
+edge_deletion,SNEA-SBERT α=0.7,0.0,,48
+edge_deletion,SNEA-SBERT α=0.8,0.0,,48
+edge_deletion,SNEA-SBERT α=0.9,0.0,,48
+edge_deletion,SNEA (WL only),0.0,,48
+edge_deletion,KEA-BERT,0.0,,48
+edge_deletion,Semantic WL,0.0,,48
+node_replacement,KEA,0.0,,50
+node_replacement,TransE,0.0,,50
+node_replacement,RotatE,0.0,,50
+node_replacement,WL Kernel,0.0,,50
+node_replacement,AA-KEA,0.0,,50
+node_replacement,SNEA-SBERT α=0.0,0.0,,50
+node_replacement,SNEA-SBERT α=0.1,0.0,,50
+node_replacement,SNEA-SBERT α=0.2,0.0,,50
+node_replacement,SNEA-SBERT α=0.3,0.0,,50
+node_replacement,SNEA-SBERT α=0.4,0.0,,50
+node_replacement,SNEA-SBERT α=0.5,0.0,,50
+node_replacement,SNEA-SBERT α=0.6,0.0,,50
+node_replacement,SNEA-SBERT α=0.7,0.0,,50
+node_replacement,SNEA-SBERT α=0.8,0.0,,50
+node_replacement,SNEA-SBERT α=0.9,0.0,,50
+node_replacement,SNEA (WL only),0.0,,50
+node_replacement,KEA-BERT,0.0,,50
+node_replacement,Semantic WL,0.0,,50
+node_deletion,KEA,0.0,,49
+node_deletion,TransE,0.0,,49
+node_deletion,RotatE,0.0,,49
+node_deletion,WL Kernel,0.0,,49
+node_deletion,AA-KEA,0.0,,49
+node_deletion,SNEA-SBERT α=0.0,0.0,,49
+node_deletion,SNEA-SBERT α=0.1,0.0,,49
+node_deletion,SNEA-SBERT α=0.2,0.0,,49
+node_deletion,SNEA-SBERT α=0.3,0.0,,49
+node_deletion,SNEA-SBERT α=0.4,0.0,,49
+node_deletion,SNEA-SBERT α=0.5,0.0,,49
+node_deletion,SNEA-SBERT α=0.6,0.0,,49
+node_deletion,SNEA-SBERT α=0.7,0.0,,49
+node_deletion,SNEA-SBERT α=0.8,0.0,,49
+node_deletion,SNEA-SBERT α=0.9,0.0,,49
+node_deletion,SNEA (WL only),0.0,,49
+node_deletion,KEA-BERT,0.0,,49
+node_deletion,Semantic WL,0.0,,49
