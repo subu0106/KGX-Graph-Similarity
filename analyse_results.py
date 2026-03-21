@@ -18,8 +18,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import stats
 
-RESULTS_CSV = "results/semantic_kg_eval/all_methods_results.csv"
-OUT_DIR     = "results/semantic_kg_eval/all_methods_final_analysis"
+RESULTS_CSV = "results/final_analysis_semantic_kg/all_methods_results.csv"
+OUT_DIR     = "results/semantic_kg_eval/all_methods_final_analysis_with_alphas"
 
 METHODS = [
     'kea_similarity',
@@ -32,23 +32,47 @@ METHODS = [
     'snea_similarity',
     'aa_kea_similarity',
     'snea_bert_similarity',
+    # ── SNEA-SBERT alpha blends (computed once, blended at different α) ──────
+    'snea_bert_alpha_0.0',
+    'snea_bert_alpha_0.1',
+    'snea_bert_alpha_0.2',
+    'snea_bert_alpha_0.3',
+    'snea_bert_alpha_0.4',
+    'snea_bert_alpha_0.5',
+    'snea_bert_alpha_0.6',
+    'snea_bert_alpha_0.7',
+    'snea_bert_alpha_0.8',
+    'snea_bert_alpha_0.9',
+    'snea_bert_alpha_1.0_SNEA_alone',
     'kea_bert_similarity',
     'semantic_wl_similarity',
 ]
 
+# Colour palette — alpha variants use a blue gradient (light→dark as α increases)
 COLORS = {
-    'kea_similarity':       '#2E86AB',
-    'kea_composite':        '#1E5F8C',
-    'kea_structural':       '#5BA3D0',
-    'kea_semantic':         '#88C0D0',
-    'transe_similarity':    '#A23B72',
-    'rotate_similarity':    '#F18F01',
-    'wl_kernel_similarity': '#6A994E',
-    'snea_similarity':      '#27AE60',
-    'aa_kea_similarity':          '#9B59B6',
-    'snea_bert_similarity': '#1ABC9C',
-    'kea_bert_similarity':        '#E67E22',
-    'semantic_wl_similarity':     '#C0392B',
+    'kea_similarity':                '#2E86AB',
+    'kea_composite':                 '#1E5F8C',
+    'kea_structural':                '#5BA3D0',
+    'kea_semantic':                  '#88C0D0',
+    'transe_similarity':             '#A23B72',
+    'rotate_similarity':             '#F18F01',
+    'wl_kernel_similarity':          '#6A994E',
+    'snea_similarity':               '#27AE60',
+    'aa_kea_similarity':             '#9B59B6',
+    'snea_bert_similarity':          '#1ABC9C',
+    'snea_bert_alpha_0.0':           '#cce5ff',
+    'snea_bert_alpha_0.1':           '#99caff',
+    'snea_bert_alpha_0.2':           '#66b0ff',
+    'snea_bert_alpha_0.3':           '#3395ff',
+    'snea_bert_alpha_0.4':           '#007bff',
+    'snea_bert_alpha_0.5':           '#0062cc',
+    'snea_bert_alpha_0.6':           '#004a99',
+    'snea_bert_alpha_0.7':           '#003166',
+    'snea_bert_alpha_0.8':           '#001933',
+    'snea_bert_alpha_0.9':           '#00060d',
+    'snea_bert_alpha_1.0_SNEA_alone':'#000000',
+    'kea_bert_similarity':           '#E67E22',
+    'semantic_wl_similarity':        '#C0392B',
 }
 
 N_BOOTSTRAP = 1000

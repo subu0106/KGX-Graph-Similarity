@@ -428,16 +428,16 @@ def cross_dataset_analysis(all_results):
     # ── Ranking table + bar — follows update_cross_dataset.py::plot_ranks ────
     mean_f1  = np.nanmean(f1_mat,  axis=0)
     mean_auc = np.nanmean(auc_mat, axis=0)
+    avg_score = (mean_f1 + mean_auc) / 2
     rank_df = pd.DataFrame({
         'method_col': active_methods,
         'Method':     [METHOD_LABELS.get(m, m) for m in active_methods],
         'Mean F1':    mean_f1,
         'Mean AUC':   mean_auc,
-        'F1 Rank':    pd.Series(mean_f1).rank(ascending=False).values,
-        'AUC Rank':   pd.Series(mean_auc).rank(ascending=False).values,
+        'Avg Score':  avg_score,
+        'Rank':       pd.Series(avg_score).rank(ascending=False, method='min').values,
     })
-    rank_df['Avg Rank'] = (rank_df['F1 Rank'] + rank_df['AUC Rank']) / 2
-    rank_df = rank_df.sort_values('Avg Rank').reset_index(drop=True)
+    rank_df = rank_df.sort_values('Rank').reset_index(drop=True)
     rank_df.to_csv(cross_dir / 'cross_dataset_summary.csv', index=False)
 
     # Ranking bar chart (like all_methods_ranks.png in update_cross_dataset.py)
@@ -462,7 +462,7 @@ def cross_dataset_analysis(all_results):
     base_p = mpatches.Patch(color='#aec7e8', label='Baselines')
     fig.legend(handles=[ours_p, base_p], loc='lower center', ncol=2,
                fontsize=10, bbox_to_anchor=(0.5, -0.02))
-    plt.suptitle('Method Ranking by Mean F1 and AUC (sorted by Avg Rank)',
+    plt.suptitle('Method Ranking by Mean F1 and AUC (sorted by Avg Score = (F1+AUC)/2)',
                  fontsize=13, fontweight='bold')
     plt.tight_layout(rect=[0, 0.03, 1, 1])
     plt.savefig(cross_dir / 'ranking_bar.png', dpi=150, bbox_inches='tight')
@@ -470,11 +470,11 @@ def cross_dataset_analysis(all_results):
     print('  Saved: ranking_bar.png')
 
     # Ranking table image
-    rows = [[row['Method'], f'{row["Mean F1"]:.4f}', f'{row["Mean AUC"]:.4f}',
-             f'{int(row["F1 Rank"])}', f'{int(row["AUC Rank"])}',
-             f'{row["Avg Rank"]:.1f}']
+    rows = [[f'{int(row["Rank"])}', row['Method'],
+             f'{row["Mean F1"]:.4f}', f'{row["Mean AUC"]:.4f}',
+             f'{row["Avg Score"]:.4f}']
             for _, row in rank_df.iterrows()]
-    cols = ['Method', 'Mean F1', 'Mean AUC', 'F1 Rank', 'AUC Rank', 'Avg Rank']
+    cols = ['Rank', 'Method', 'Mean F1', 'Mean AUC', 'Avg Score']
     h = 0.35 * (len(rows) + 1) + 0.6
     fig, ax = plt.subplots(figsize=(10, h))
     ax.axis('off')
@@ -490,7 +490,7 @@ def cross_dataset_analysis(all_results):
         for c in range(len(cols)):
             tbl[r, c].set_facecolor(bg)
             tbl[r, c].set_text_props(color='black')
-    ax.set_title('Method Ranking — Cross-Dataset (sorted by Avg Rank)',
+    ax.set_title('Method Ranking — Cross-Dataset  (rank by Avg Score = (Mean F1 + Mean AUC) / 2)',
                  fontsize=11, fontweight='bold')
     plt.savefig(cross_dir / 'ranking_table.png', dpi=150, bbox_inches='tight')
     plt.close()
@@ -498,13 +498,13 @@ def cross_dataset_analysis(all_results):
 
     # Terminal print
     print(f'\n{"="*65}')
-    print('CROSS-DATASET RANKING')
+    print('CROSS-DATASET RANKING  (sorted by Avg Score = (Mean F1 + Mean AUC) / 2)')
     print(f'{"="*65}')
-    print(f'{"Method":<28}  {"Mean F1":>7}  {"Mean AUC":>8}  {"Avg Rank":>8}')
-    print('-' * 58)
+    print(f'{"Rank":>4}  {"Method":<28}  {"Mean F1":>7}  {"Mean AUC":>8}  {"Avg Score":>9}')
+    print('-' * 62)
     for _, row in rank_df.iterrows():
-        print(f'{row["Method"]:<28}  {row["Mean F1"]:>7.4f}  '
-              f'{row["Mean AUC"]:>8.4f}  {row["Avg Rank"]:>8.1f}')
+        print(f'{int(row["Rank"]):>4}  {row["Method"]:<28}  {row["Mean F1"]:>7.4f}  '
+              f'{row["Mean AUC"]:>8.4f}  {row["Avg Score"]:>9.4f}')
 
     # ── Variants-only heatmap (update_cross_dataset.py::plot_variants_heatmap) ─
     our_idx   = [j for j, m in enumerate(active_methods) if m in OUR_VARIANTS]
