@@ -34,16 +34,22 @@ Usage:
   nohup python score_kgs_with_temps.py --scores snea_sbert_gold_llm snea_sbert_ctx_llm --multiprocessing --workers 6 > run.log 2>&1 &
   tail -f run.log   # watch progress
 
+  # Google Colab — save each result to Drive as soon as it finishes
+  python score_kgs_with_temps.py --gdrive-dir /content/drive/MyDrive/Results_KGs_with_temps
+
 Notes:
   - Results are written to a .tmp file first and renamed to .csv only after all rows
     are done. A leftover .tmp file means the run was interrupted before completing.
   - On Apple Silicon (M2/M3) the model runs on MPS (GPU) automatically — no CUDA needed.
   - Embedding cache in snea_sbert.py deduplicates SBERT calls within each row.
+  - --gdrive-dir copies each finished CSV to Google Drive immediately after completion,
+    so results are not lost if the Colab session times out mid-run.
 """
 
 import ast
 import csv
 import gc
+import shutil
 import argparse
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -257,6 +263,11 @@ def main():
                              f'For a 16 GiB card, --workers 6 is a safe upper bound.')
     parser.add_argument('--batch-size', type=int, default=DEFAULT_BATCH_SIZE,
                         help=f'Rows per worker batch (default: {DEFAULT_BATCH_SIZE})')
+    parser.add_argument('--gdrive-dir', type=str, default=None,
+                        help='Google Drive folder to copy each finished CSV into immediately '
+                             '(e.g. /content/drive/MyDrive/Results_KGs_with_temps). '
+                             'Subfolder structure is preserved. Useful in Colab so results '
+                             'are saved even if the session times out mid-run.')
     args = parser.parse_args()
 
     if args.multiprocessing:
@@ -283,6 +294,11 @@ def main():
                      workers=args.workers, batch_size=args.batch_size,
                      active_scores=args.scores)
         print(f'Saved → {out}')
+        if args.gdrive_dir:
+            gdrive_dest = Path(args.gdrive_dir) / out.name
+            gdrive_dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(out, gdrive_dest)
+            print(f'Copied → {gdrive_dest}')
         return
 
     if args.temp:
@@ -323,7 +339,14 @@ def main():
             batch_size=args.batch_size,
             active_scores=args.scores,
         )
-        print(f'    Saved → {out}\n')
+        print(f'    Saved → {out}')
+
+        if args.gdrive_dir:
+            gdrive_dest = Path(args.gdrive_dir) / out.relative_to(OUTPUT_DIR)
+            gdrive_dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(out, gdrive_dest)
+            print(f'    Copied → {gdrive_dest}')
+        print()
 
     print(f'Done. All outputs in: {OUTPUT_DIR}')
     print('Score columns added to each file:')
