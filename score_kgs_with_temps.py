@@ -18,17 +18,21 @@ Output columns = all original columns + the three score columns above.
 
 Usage:
   python score_kgs_with_temps.py
-  python score_kgs_with_temps.py --limit 5          # quick test
-  python score_kgs_with_temps.py --resume           # skip already-done files
-  python score_kgs_with_temps.py --temp 0           # only one temperature folder
+  python score_kgs_with_temps.py --limit 5                      # quick test
+  python score_kgs_with_temps.py --resume                       # skip already-done files
+  python score_kgs_with_temps.py --temp 0                       # only one temperature folder
+  python score_kgs_with_temps.py --multiprocessing              # parallel workers (default 4)
+  python score_kgs_with_temps.py --multiprocessing --workers 6  # tune to GPU RAM
+  python score_kgs_with_temps.py --multiprocessing --workers 6 --batch-size 30
 """
 
 import ast
 import csv
 import gc
 import argparse
+import multiprocessing
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
-from Methods.snea_sbert import calculate_snea_sbert_similarity
 
 _HERE      = Path(__file__).parent
 INPUT_DIR  = _HERE / 'KGs_with_temps'
@@ -41,6 +45,13 @@ SCORE_COLS = [
     'snea_sbert_ctx_gold',   # anchor=kg_context, filtered=kg_gold → how much of gold is grounded in context
 ]
 
+DEFAULT_WORKERS    = 4
+DEFAULT_BATCH_SIZE = 20
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
 def parse_triples(kg_str):
     try:
@@ -56,26 +67,80 @@ def parse_triples(kg_str):
     return []
 
 
-def snea_score(fn, kg_a, kg_b):
-    """Call calculate_snea_sbert_similarity and return its blended score directly."""
+def _snea_score(fn, kg_a, kg_b):
+    """Call fn(kg_a, kg_b) and return the blended float score, or None on failure."""
     if not kg_a or not kg_b:
         return None
     try:
         similarity, _ = fn(kg_a, kg_b)
         return float(similarity)
     except Exception as e:
-        print(f'    ERROR: {e}')
+        print(f'    ERROR: {e}', flush=True)
         return None
 
 
-def process_file(input_path, output_path, fn, limit=None):
+def _chunk(lst, size):
+    for i in range(0, len(lst), size):
+        yield lst[i:i + size]
+
+
+# ---------------------------------------------------------------------------
+# Worker  (runs in a spawned subprocess — must re-import the model here)
+# ---------------------------------------------------------------------------
+
+def _process_batch(batch_data):
+    """
+    Worker entry point.
+
+    Each spawned process loads its own copy of the SBERT model on GPU.
+    paraphrase-MPNet-base-v2 uses ~400 MiB VRAM, so with N workers the
+    total GPU cost is N × ~400 MiB  (e.g. 6 workers → ~2.4 GiB on a
+    16 GiB card).
+
+    Args:
+        batch_data: (rows: list[dict], base_cols: list[str])
+
+    Returns:
+        list[dict] with all original columns + the three score columns.
+    """
+    # pylint: disable=import-outside-toplevel
+    from Methods.snea_sbert import calculate_snea_sbert_similarity as fn
+
+    rows, base_cols = batch_data
+    results = []
+
+    for row in rows:
+        kg_gold = parse_triples(row.get('kg_gold',    ''))
+        kg_llm  = parse_triples(row.get('kg_llm',     ''))
+        kg_ctx  = parse_triples(row.get('kg_context', ''))
+
+        result = {col: row.get(col, '') for col in base_cols}
+        result['snea_sbert_gold_llm'] = _snea_score(fn, kg_gold, kg_llm)
+        result['snea_sbert_ctx_llm']  = _snea_score(fn, kg_ctx,  kg_llm)
+        result['snea_sbert_ctx_gold'] = _snea_score(fn, kg_ctx,  kg_gold)
+
+        results.append(result)
+        gc.collect()
+
+    return results
+
+
+# ---------------------------------------------------------------------------
+# File processor
+# ---------------------------------------------------------------------------
+
+def process_file(input_path, output_path, limit=None,
+                 use_multiprocessing=False,
+                 workers=DEFAULT_WORKERS,
+                 batch_size=DEFAULT_BATCH_SIZE):
+
     with open(input_path, 'r', encoding='utf-8') as f:
         rows = list(csv.DictReader(f))
 
     if limit:
         rows = rows[:limit]
 
-    total = len(rows)
+    total     = len(rows)
     base_cols = list(rows[0].keys()) if rows else []
     extra_cols = [c for c in SCORE_COLS if c not in base_cols]
     fieldnames = base_cols + extra_cols
@@ -83,28 +148,67 @@ def process_file(input_path, output_path, fn, limit=None):
     output_path.parent.mkdir(parents=True, exist_ok=True)
     tmp_path = output_path.with_suffix('.tmp')
 
+    mode = f'multiprocess (workers={workers}, batch={batch_size})' if use_multiprocessing else 'single-process'
+    print(f'    {total} rows  |  {mode}', flush=True)
+
     with open(tmp_path, 'w', newline='', encoding='utf-8') as out_f:
         writer = csv.DictWriter(out_f, fieldnames=fieldnames, extrasaction='ignore')
         writer.writeheader()
 
-        for idx, row in enumerate(rows, 1):
-            if idx % 100 == 0 or idx == total:
-                print(f'    [{idx:>4}/{total}]', flush=True)
+        if use_multiprocessing:
+            batches   = [(list(chunk), base_cols) for chunk in _chunk(rows, batch_size)]
+            n_batches = len(batches)
+            ordered   = [None] * n_batches
+            done      = 0
 
-            kg_gold = parse_triples(row.get('kg_gold', ''))
-            kg_llm  = parse_triples(row.get('kg_llm',  ''))
-            kg_ctx  = parse_triples(row.get('kg_context', ''))
+            with ProcessPoolExecutor(max_workers=workers) as executor:
+                future_map = {
+                    executor.submit(_process_batch, b): idx
+                    for idx, b in enumerate(batches)
+                }
+                for future in as_completed(future_map):
+                    idx = future_map[future]
+                    try:
+                        ordered[idx] = future.result()
+                    except Exception as e:
+                        print(f'    Batch {idx} failed: {e}', flush=True)
+                        ordered[idx] = []
+                    done += 1
+                    done_rows = sum(len(b) for b in ordered if b is not None)
+                    print(f'    Batches done: {done}/{n_batches}  ({done_rows}/{total} rows)',
+                          flush=True)
 
-            # kg1=anchor (drives filtering), kg2=what gets filtered against kg1
-            row['snea_sbert_gold_llm'] = snea_score(fn, kg_gold, kg_llm)  # gold anchors    → how much of LLM matches gold
-            row['snea_sbert_ctx_llm']  = snea_score(fn, kg_ctx,  kg_llm)  # context anchors → how much of LLM is grounded in context
-            row['snea_sbert_ctx_gold'] = snea_score(fn, kg_ctx,  kg_gold) # context anchors → how much of gold is grounded in context
+            for batch_results in ordered:
+                if batch_results:
+                    for result in batch_results:
+                        writer.writerow(result)
+                    out_f.flush()
 
-            writer.writerow(row)
-            gc.collect()
+        else:
+            # Single-process path: model is already loaded at import time
+            from Methods.snea_sbert import calculate_snea_sbert_similarity as fn
+
+            for idx, row in enumerate(rows, 1):
+                if idx % 100 == 0 or idx == total:
+                    print(f'    [{idx:>4}/{total}]', flush=True)
+
+                kg_gold = parse_triples(row.get('kg_gold',    ''))
+                kg_llm  = parse_triples(row.get('kg_llm',     ''))
+                kg_ctx  = parse_triples(row.get('kg_context', ''))
+
+                row['snea_sbert_gold_llm'] = _snea_score(fn, kg_gold, kg_llm)
+                row['snea_sbert_ctx_llm']  = _snea_score(fn, kg_ctx,  kg_llm)
+                row['snea_sbert_ctx_gold'] = _snea_score(fn, kg_ctx,  kg_gold)
+
+                writer.writerow(row)
+                gc.collect()
 
     tmp_path.replace(output_path)
 
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
 
 def main():
     parser = argparse.ArgumentParser(
@@ -116,7 +220,18 @@ def main():
                         help='Skip files whose output already exists')
     parser.add_argument('--temp',   type=str, default=None,
                         help='Process only one temperature subfolder (e.g. --temp 0)')
+    parser.add_argument('--multiprocessing', action='store_true', default=False,
+                        help='Use parallel workers (recommended on GPU server)')
+    parser.add_argument('--workers', type=int, default=DEFAULT_WORKERS,
+                        help=f'Number of parallel workers (default: {DEFAULT_WORKERS}). '
+                             f'Each worker loads ~400 MiB VRAM. '
+                             f'For a 16 GiB card, --workers 6 is a safe upper bound.')
+    parser.add_argument('--batch-size', type=int, default=DEFAULT_BATCH_SIZE,
+                        help=f'Rows per worker batch (default: {DEFAULT_BATCH_SIZE})')
     args = parser.parse_args()
+
+    if args.multiprocessing:
+        multiprocessing.set_start_method('spawn', force=True)
 
     if args.temp:
         temp_dirs = [INPUT_DIR / args.temp]
@@ -135,7 +250,11 @@ def main():
         return
 
     print(f'Found {len(all_files)} file(s) across {len(temp_dirs)} temperature folder(s)')
-    print(f'Alpha = {ALPHA}  |  Output → {OUTPUT_DIR}\n')
+    print(f'Alpha = {ALPHA}  |  Output → {OUTPUT_DIR}')
+    if args.multiprocessing:
+        print(f'Workers = {args.workers}  |  Batch size = {args.batch_size}  '
+              f'|  Est. VRAM = {args.workers} × ~400 MiB = ~{args.workers * 400} MiB')
+    print()
 
     for i, (inp, out) in enumerate(all_files, 1):
         print(f'[{i}/{len(all_files)}] temp={inp.parent.name}  |  {inp.name}')
@@ -144,7 +263,13 @@ def main():
             print('    Skipping (output exists)\n')
             continue
 
-        process_file(inp, out, calculate_snea_sbert_similarity, limit=args.limit)
+        process_file(
+            inp, out,
+            limit=args.limit,
+            use_multiprocessing=args.multiprocessing,
+            workers=args.workers,
+            batch_size=args.batch_size,
+        )
         print(f'    Saved → {out}\n')
 
     print(f'Done. All outputs in: {OUTPUT_DIR}')
