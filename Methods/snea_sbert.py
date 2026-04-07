@@ -39,7 +39,12 @@ from grakel import Graph
 from grakel.kernels import WeisfeilerLehman
 from sentence_transformers import SentenceTransformer
 
-DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+if torch.cuda.is_available():
+    DEVICE = torch.device('cuda')
+elif torch.backends.mps.is_available():
+    DEVICE = torch.device('mps')
+else:
+    DEVICE = torch.device('cpu')
 sbert_model = SentenceTransformer('paraphrase-MPNet-base-v2', device=DEVICE)
 
 ALPHA = 0.5   # weight for WL score; (1 - ALPHA) goes to SBERT score
@@ -49,16 +54,25 @@ ALPHA = 0.5   # weight for WL score; (1 - ALPHA) goes to SBERT score
 # Embedding helpers  (unchanged from aa_kea.py)
 # ---------------------------------------------------------------------------
 
+_emb_cache: dict = {}   # text → np.ndarray, persists for the lifetime of the process
+
+
 def get_sbert_embedding(label):
-    embedding = sbert_model.encode(label, convert_to_tensor=True, device=DEVICE)
-    return embedding.detach().cpu().numpy()
+    if label not in _emb_cache:
+        embedding = sbert_model.encode(label, convert_to_tensor=False)
+        _emb_cache[label] = np.array(embedding)
+    return _emb_cache[label]
 
 
 def get_batch_embeddings(labels):
     if not labels:
         return np.array([])
-    embeddings = sbert_model.encode(labels, convert_to_tensor=True, device=DEVICE)
-    return embeddings.detach().cpu().numpy()
+    uncached = [l for l in labels if l not in _emb_cache]
+    if uncached:
+        new_embs = sbert_model.encode(uncached, convert_to_tensor=False, batch_size=64)
+        for label, emb in zip(uncached, new_embs):
+            _emb_cache[label] = np.array(emb)
+    return np.array([_emb_cache[l] for l in labels])
 
 
 def cosine_sim(emb1, emb2):
