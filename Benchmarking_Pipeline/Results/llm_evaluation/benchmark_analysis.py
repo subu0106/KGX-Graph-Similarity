@@ -1,7 +1,12 @@
 """
 LLM Benchmarking Analysis — SNEA-SBERT
-Models  : Llama-2-7b-chat-hf, Gemma-7b-it, Mistral-7B-Instruct-v0.2
+Models  : Llama-2-7b-chat-hf, Gemma-7b-it, Mistral-7B-Instruct-v0.2, Falcon-7b-instruct
 Datasets: PubMedQA (biomedical), MesaQA (general health)
+Source  : Results_KGs_with_temps/  (temperature subfolders: 0, 0.3, 0.7, 1.0)
+
+Score columns in source CSVs:
+  snea_sbert_gold_llm  → GoldSim    (how much LLM output matches gold)
+  snea_sbert_ctx_llm   → ContextSim (how much LLM output is grounded in context)
 
 Analyses:
   0.  Summary stats table      — Average/Median/Std/Max/Min/Perfect/High per model per dataset
@@ -15,6 +20,7 @@ Analyses:
   8.  Statistical significance — Wilcoxon signed-rank (paired) + Mann-Whitney U
   9.  Radar chart              — multi-dimensional comparison
   10. Heatmap                  — model × dataset × metric grid
+  11. Temperature trend        — GoldSim & ContextSim vs temperature per model per dataset
 """
 
 import os
@@ -29,41 +35,66 @@ import matplotlib.patches as mpatches
 import seaborn as sns
 from scipy import stats
 
-RESULTS_DIR = os.path.dirname(os.path.abspath(__file__))
-OUT_DIR     = os.path.join(RESULTS_DIR, 'benchmark_plots')
+# ---------------------------------------------------------------------------
+# Paths
+# ---------------------------------------------------------------------------
+
+SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
+RESULTS_DIR = os.path.normpath(
+    os.path.join(SCRIPT_DIR, '..', '..', '..', 'Results_KGs_with_temps')
+)
+OUT_DIR = os.path.normpath(
+    os.path.join(SCRIPT_DIR, '..', 'benchmark_plots_with_temps')
+)
 os.makedirs(OUT_DIR, exist_ok=True)
+
+# Score column names in the source CSVs
+COL_GOLD = 'snea_sbert_gold_llm'
+COL_CTX  = 'snea_sbert_ctx_llm'
+
+# ---------------------------------------------------------------------------
+# Model / dataset metadata
+# ---------------------------------------------------------------------------
 
 MODEL_LABELS = {
     'Llama-2-7b-chat-hf':       'Llama-2-7B',
     'Mistral-7B-Instruct-v0.2': 'Mistral-7B',
     'gemma-7b-it':              'Gemma-7B',
+    'falcon-7b-instruct':       'Falcon-7B',
 }
 
 MODEL_FULL_NAMES = {
     'Llama-2-7B': 'meta-llama/Llama-2-7b-chat-hf',
     'Gemma-7B':   'google/gemma-7b-it',
     'Mistral-7B': 'mistralai/Mistral-7B-Instruct-v0.2',
+    'Falcon-7B':  'tiiuae/falcon-7b-instruct',
 }
 
 DATASET_LABELS = {
     'mesaqa':   'MesaQA',
     'pubmedqa': 'PubMedQA',
-    'pubpubmedqa': 'PubMedQA',
 }
 
 MODEL_COLORS = {
     'Llama-2-7B': '#2E86AB',
     'Mistral-7B': '#A23B72',
     'Gemma-7B':   '#6A994E',
+    'Falcon-7B':  '#E07B39',
 }
 
-MODELS   = ['Llama-2-7B', 'Gemma-7B', 'Mistral-7B']
-DATASETS = ['PubMedQA', 'MesaQA']
+MODELS       = ['Llama-2-7B', 'Gemma-7B', 'Mistral-7B', 'Falcon-7B']
+DATASETS     = ['PubMedQA', 'MesaQA']
+TEMPERATURES = [0.0, 0.3, 0.7, 1.0]
 
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
 def infer_names(filepath):
-    """Return (dataset_label, model_label) inferred from filename."""
-    stem = os.path.splitext(os.path.basename(filepath))[0]
+    """Return (dataset_label, model_label, temperature_float) from filepath."""
+    stem   = os.path.splitext(os.path.basename(filepath))[0]
+    parent = os.path.basename(os.path.dirname(filepath))   # "0", "0.3", "0.7", "1.0"
 
     dataset = next(
         (label for key, label in DATASET_LABELS.items() if key in stem.lower()),
@@ -73,24 +104,31 @@ def infer_names(filepath):
         (label for key, label in MODEL_LABELS.items() if key in stem),
         stem
     )
-    return dataset, model
+    try:
+        temperature = float(parent)
+    except ValueError:
+        temperature = 0.0
+
+    return dataset, model, temperature
 
 
 def load_all():
-    """Load all *_scored.csv files and return a flat list of record dicts."""
-    files = sorted(glob.glob(os.path.join(RESULTS_DIR, '*_scored.csv')))
+    """Load all CSV files from Results_KGs_with_temps/ subfolders."""
+    files = sorted(glob.glob(os.path.join(RESULTS_DIR, '**', '*.csv'), recursive=True))
     if not files:
-        print("No *_scored.csv files found in", RESULTS_DIR)
+        print("No CSV files found in", RESULTS_DIR)
         return []
 
     records = []
     for filepath in files:
-        dataset, model = infer_names(filepath)
+        dataset, model, temperature = infer_names(filepath)
         with open(filepath, encoding='utf-8') as f:
             for row in csv.DictReader(f):
+                if COL_GOLD not in row or COL_CTX not in row:
+                    continue
                 try:
-                    gold = float(row.get('gold_similarity',    0) or 0)
-                    ctx  = float(row.get('context_similarity', 0) or 0)
+                    gold = float(row.get(COL_GOLD, 0) or 0)
+                    ctx  = float(row.get(COL_CTX,  0) or 0)
                 except ValueError:
                     gold, ctx = 0.0, 0.0
                 cus = (2 * gold * ctx / (gold + ctx)) if (gold + ctx) > 0 else 0.0
@@ -98,6 +136,7 @@ def load_all():
                     'id':                 row.get('id', ''),
                     'dataset':            dataset,
                     'model':              model,
+                    'temperature':        temperature,
                     'gold_similarity':    gold,
                     'context_similarity': ctx,
                     'cus':                cus,
@@ -107,7 +146,6 @@ def load_all():
 
 
 def build_summary(records, metric='gold_similarity'):
-    """Aggregate mean/median/std/min/max per dataset × model for a given metric."""
     groups = defaultdict(list)
     for r in records:
         groups[(r['dataset'], r['model'])].append(r[metric])
@@ -138,7 +176,7 @@ def _print_table(rows, cols, title):
     print(f'\n{title}')
     widths = [max(len(str(cols[i])), max((len(str(r[i])) for r in rows), default=0))
               for i in range(len(cols))]
-    sep = '  '.join('-' * w for w in widths)
+    sep    = '  '.join('-' * w for w in widths)
     header = '  '.join(str(cols[i]).ljust(widths[i]) for i in range(len(cols)))
     print(header)
     print(sep)
@@ -192,12 +230,11 @@ def _summary_rows(records, metric):
     return rows
 
 
+# ---------------------------------------------------------------------------
+# Analysis 0 — Summary stats
+# ---------------------------------------------------------------------------
+
 def plot_summary_stats(records):
-    """
-    Analysis 0 — Summary stats tables.
-    One table for gold_similarity, one for context_similarity.
-    Average/Median/Std/Max/Min/Perfect (≥0.99)/High (≥0.80), scores as percentages.
-    """
     cols = ['Dataset', 'Model', 'Average (%)', 'Median (%)', 'Std Dev (%)',
             'Max (%)', 'Min (%)', 'Perfect (≈1.0)', 'High (≥0.8)']
 
@@ -214,11 +251,11 @@ def plot_summary_stats(records):
                   '0b_summary_context.png', figsize=(20, 0.45 * (len(ctx_rows) + 1) + 0.6))
 
 
+# ---------------------------------------------------------------------------
+# Analysis 1 — Bar chart + boxplot
+# ---------------------------------------------------------------------------
+
 def plot_comparison(records):
-    """
-    Analysis 1 — Bar chart (mean ± std) + boxplot, one column per dataset.
-    Mirrors the plot_comparison style from llm_benchmark_similarity.py.
-    """
     groups = defaultdict(list)
     for r in records:
         groups[(r['dataset'], r['model'])].append(r['gold_similarity'])
@@ -272,11 +309,11 @@ def plot_comparison(records):
     print('Saved: 1_comparison.png')
 
 
+# ---------------------------------------------------------------------------
+# Analysis 2 — Primary benchmark table
+# ---------------------------------------------------------------------------
+
 def plot_primary_table(records):
-    """
-    Analysis 2 — Primary benchmark table.
-    Score_model = (1/N) * sum(Similarity_i), reported for GoldSim and ContextSim.
-    """
     rows = []
     for model in MODELS:
         row = [model]
@@ -294,11 +331,11 @@ def plot_primary_table(records):
                   '2_primary_table.png')
 
 
+# ---------------------------------------------------------------------------
+# Analysis 3 — CUS leaderboard
+# ---------------------------------------------------------------------------
+
 def plot_cus_table(records):
-    """
-    Analysis 3 — CUS leaderboard.
-    CUS = 2 * (gold * context) / (gold + context)  — harmonic mean (F1-style).
-    """
     rows = []
     for dataset in DATASETS:
         for model in MODELS:
@@ -313,7 +350,6 @@ def plot_cus_table(records):
                          f'{np.mean(sub_cus):.4f}'])
 
     rows.sort(key=lambda r: (r[0], -float(r[4])))
-    
     cols = ['Dataset', 'Model', 'Gold Sim', 'Context Sim', 'CUS (F1)']
     _print_table(rows, cols, 'Contextual Understanding Score (CUS) Leaderboard')
     _table_figure(rows, cols,
@@ -321,30 +357,30 @@ def plot_cus_table(records):
                   '3_cus_leaderboard.png')
 
 
+# ---------------------------------------------------------------------------
+# Analysis 4 — RMSE
+# ---------------------------------------------------------------------------
+
 def plot_rmse(records):
-    """
-    Analysis 4 — RMSE against gold.
-    RMSE = sqrt( (1/N) * sum( (1 - similarity)^2 ) )
-    Lower RMSE = model answers are closer to perfect gold match.
-    """
     groups = defaultdict(list)
     for r in records:
         groups[(r['dataset'], r['model'])].append(r['gold_similarity'])
 
     x     = np.arange(len(DATASETS))
-    width = 0.25
-    fig, ax = plt.subplots(figsize=(8, 5))
+    width = 0.2
+    fig, ax = plt.subplots(figsize=(9, 5))
     for i, model in enumerate(MODELS):
         vals = []
         for dataset in DATASETS:
             arr = np.array(groups[(dataset, model)])
             vals.append(np.sqrt(np.mean((1 - arr) ** 2)) if len(arr) else 0)
         bars = ax.bar(x + i * width, vals, width, label=model,
-                      color=MODEL_COLORS.get(model, '#888'), alpha=0.85, edgecolor='black', linewidth=0.7)
+                      color=MODEL_COLORS.get(model, '#888'), alpha=0.85,
+                      edgecolor='black', linewidth=0.7)
         for bar, v in zip(bars, vals):
             ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.005,
                     f'{v:.3f}', ha='center', va='bottom', fontsize=8, fontweight='bold')
-    ax.set_xticks(x + width)
+    ax.set_xticks(x + width * 1.5)
     ax.set_xticklabels(DATASETS)
     ax.set_ylabel('RMSE (lower = better)')
     ax.set_ylim(0, 1)
@@ -358,28 +394,29 @@ def plot_rmse(records):
     print('Saved: 4_rmse.png')
 
 
+# ---------------------------------------------------------------------------
+# Analysis 5 — Grouped bar chart
+# ---------------------------------------------------------------------------
+
 def plot_grouped_bar(records):
-    """
-    Analysis 5 — Grouped bar chart: GoldSim, ContextSim, CUS side by side.
-    """
     metrics = [
         ('gold_similarity',    'Gold Similarity'),
         ('context_similarity', 'Context Similarity'),
         ('cus',                'CUS (F1 of Gold & Context)'),
     ]
-    fig, axes = plt.subplots(1, 3, figsize=(16, 5), sharey=True)
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5), sharey=True)
+    width = 0.2
     for ax, (metric, title) in zip(axes, metrics):
         groups = defaultdict(list)
         for r in records:
             groups[(r['dataset'], r['model'])].append(r[metric])
-        x     = np.arange(len(DATASETS))
-        width = 0.25
+        x = np.arange(len(DATASETS))
         for i, model in enumerate(MODELS):
             means = [np.mean(groups[(d, model)]) if groups[(d, model)] else 0 for d in DATASETS]
             ax.bar(x + i * width, means, width, label=model,
                    color=MODEL_COLORS.get(model, '#888'), alpha=0.88)
         ax.set_title(title, fontweight='bold')
-        ax.set_xticks(x + width)
+        ax.set_xticks(x + width * 1.5)
         ax.set_xticklabels(DATASETS)
         ax.set_ylim(0, 1)
         ax.legend(fontsize=8)
@@ -392,11 +429,11 @@ def plot_grouped_bar(records):
     print('Saved: 5_grouped_bar.png')
 
 
+# ---------------------------------------------------------------------------
+# Analysis 6 — Pairwise win-rate
+# ---------------------------------------------------------------------------
+
 def plot_winrate(records):
-    """
-    Analysis 6 — Pairwise win-rate on gold_similarity.
-    WinRate(A, B) = #(score_A > score_B) / N
-    """
     rows = []
     for dataset in DATASETS:
         by_id = defaultdict(dict)
@@ -420,11 +457,11 @@ def plot_winrate(records):
     _table_figure(rows, cols, 'Pairwise Win-Rate — Gold Similarity', '6_winrate.png')
 
 
+# ---------------------------------------------------------------------------
+# Analysis 7 — Distribution analysis
+# ---------------------------------------------------------------------------
+
 def plot_distributions(records):
-    """
-    Analysis 7 — Histogram + boxplot + violin per dataset.
-    Summary stats table: mean, median, std, min, max.
-    """
     groups = defaultdict(list)
     for r in records:
         groups[(r['dataset'], r['model'])].append(r['gold_similarity'])
@@ -434,8 +471,9 @@ def plot_distributions(records):
 
         for model in MODELS:
             vals = groups[(dataset, model)]
-            axes[0].hist(vals, bins=20, alpha=0.55, label=model,
-                         color=MODEL_COLORS.get(model, '#888'))
+            if vals:
+                axes[0].hist(vals, bins=20, alpha=0.55, label=model,
+                             color=MODEL_COLORS.get(model, '#888'))
         axes[0].set_xlabel('Gold Similarity')
         axes[0].set_ylabel('Count')
         axes[0].set_title('Histogram')
@@ -451,7 +489,8 @@ def plot_distributions(records):
         axes[1].set_title('Boxplot')
         axes[1].grid(axis='y', alpha=0.3)
 
-        parts = axes[2].violinplot(data, positions=range(len(MODELS)), showmedians=True)
+        parts = axes[2].violinplot([d if d else [0] for d in data],
+                                   positions=range(len(MODELS)), showmedians=True)
         for pc, model in zip(parts['bodies'], MODELS):
             pc.set_facecolor(MODEL_COLORS.get(model, '#888'))
             pc.set_alpha(0.75)
@@ -485,19 +524,19 @@ def plot_distributions(records):
     print('Saved: 7_distribution_*.png')
 
 
+# ---------------------------------------------------------------------------
+# Analysis 8 — Gold vs Context scatter
+# ---------------------------------------------------------------------------
+
 def plot_scatter(records):
-    """
-    Analysis 8 — Gold vs Context scatter.
-    Above diagonal: better context use than factual accuracy (context-grounded).
-    Below diagonal: factually accurate but ignores context (memorisation risk).
-    """
     fig, axes = plt.subplots(1, 2, figsize=(13, 5))
     for ax, dataset in zip(axes, DATASETS):
         for model in MODELS:
             gold = [r['gold_similarity']    for r in records if r['dataset'] == dataset and r['model'] == model]
             ctx  = [r['context_similarity'] for r in records if r['dataset'] == dataset and r['model'] == model]
-            ax.scatter(gold, ctx, label=model, color=MODEL_COLORS.get(model, '#888'),
-                       alpha=0.45, s=18, edgecolors='none')
+            if gold:
+                ax.scatter(gold, ctx, label=model, color=MODEL_COLORS.get(model, '#888'),
+                           alpha=0.45, s=18, edgecolors='none')
         ax.plot([0, 1], [0, 1], 'k--', lw=0.8, alpha=0.4, label='gold = context')
         ax.set_xlabel('Gold Similarity (Factual Accuracy)')
         ax.set_ylabel('Context Similarity (Context Utilisation)')
@@ -515,12 +554,11 @@ def plot_scatter(records):
     print('Saved: 8_scatter_gold_vs_context.png')
 
 
+# ---------------------------------------------------------------------------
+# Analysis 9 — Statistical significance
+# ---------------------------------------------------------------------------
+
 def plot_significance(records):
-    """
-    Analysis 9 — Statistical significance.
-    Wilcoxon signed-rank (paired) + Mann-Whitney U (unpaired).
-    H0: Model A = Model B  |  H1: Model A ≠ Model B
-    """
     rows = []
     for dataset in DATASETS:
         by_id = defaultdict(dict)
@@ -559,11 +597,11 @@ def plot_significance(records):
                   '9_significance.png', figsize=(17, 0.62 * len(rows) + 1.8))
 
 
+# ---------------------------------------------------------------------------
+# Analysis 10 — Radar chart
+# ---------------------------------------------------------------------------
+
 def plot_radar(records):
-    """
-    Analysis 10 — Radar chart.
-    4 axes: GoldSim × PubMedQA, ContextSim × PubMedQA, GoldSim × MesaQA, ContextSim × MesaQA.
-    """
     categories = ['Gold\nPubMedQA', 'Context\nPubMedQA', 'Gold\nMesaQA', 'Context\nMesaQA']
     N      = len(categories)
     angles = [n / float(N) * 2 * np.pi for n in range(N)] + [0]
@@ -598,20 +636,15 @@ def plot_radar(records):
     print('Saved: 10_radar.png')
 
 
+# ---------------------------------------------------------------------------
+# Analysis 11 — Heatmap
+# ---------------------------------------------------------------------------
+
 def plot_heatmap(records):
-    """
-    Analysis 11 — Heatmap: model × dataset × metric grid.
-    """
     import pandas as pd
 
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+    fig, axes = plt.subplots(1, 3, figsize=(17, 4))
     for ax, metric in zip(axes, ['gold_similarity', 'context_similarity', 'cus']):
-        data = defaultdict(dict)
-        for r in records:
-            data[r['model']][r['dataset']] = r[metric]
-        df_h = pd.DataFrame(data).T.reindex(index=MODELS, columns=DATASETS)
-        df_h = df_h.apply(pd.to_numeric, errors='coerce')
-        df_h = df_h.groupby(level=0).mean()
         pivot = pd.DataFrame(
             {d: {m: np.mean([r[metric] for r in records if r['dataset'] == d and r['model'] == m])
                  for m in MODELS}
@@ -630,8 +663,90 @@ def plot_heatmap(records):
     print('Saved: 11_heatmap.png')
 
 
+# ---------------------------------------------------------------------------
+# Analysis 12 — Temperature trend
+# ---------------------------------------------------------------------------
+
+def plot_temperature_trend(records):
+    """
+    Line chart: mean GoldSim, ContextSim, and CUS vs temperature (0, 0.3, 0.7, 1.0).
+    One subplot per dataset, one line per model.
+    """
+    for metric, metric_label, filename_tag in [
+        ('gold_similarity',    'Gold Similarity',    'gold'),
+        ('context_similarity', 'Context Similarity', 'context'),
+        ('cus',                'CUS (F1)',            'cus'),
+    ]:
+        fig, axes = plt.subplots(1, len(DATASETS), figsize=(7 * len(DATASETS), 5), sharey=True)
+
+        for ax, dataset in zip(axes, DATASETS):
+            for model in MODELS:
+                means = []
+                for temp in TEMPERATURES:
+                    vals = [r[metric] for r in records
+                            if r['dataset'] == dataset
+                            and r['model'] == model
+                            and r['temperature'] == temp]
+                    means.append(np.mean(vals) if vals else np.nan)
+
+                if any(not np.isnan(v) for v in means):
+                    ax.plot(TEMPERATURES, means,
+                            marker='o', linewidth=2, markersize=6,
+                            label=model, color=MODEL_COLORS.get(model, '#888'))
+                    for x, y in zip(TEMPERATURES, means):
+                        if not np.isnan(y):
+                            ax.annotate(f'{y:.3f}', (x, y),
+                                        textcoords='offset points', xytext=(0, 8),
+                                        ha='center', fontsize=7)
+
+            ax.set_title(dataset, fontweight='bold')
+            ax.set_xlabel('Temperature')
+            ax.set_ylabel(metric_label)
+            ax.set_xticks(TEMPERATURES)
+            ax.set_xticklabels([str(t) for t in TEMPERATURES])
+            ax.set_ylim(0, 1)
+            ax.legend(fontsize=8)
+            ax.grid(alpha=0.3)
+
+        fig.suptitle(f'Effect of Temperature on {metric_label}',
+                     fontsize=13, fontweight='bold')
+        plt.tight_layout(rect=[0, 0, 1, 0.95])
+        fname = f'12_temperature_trend_{filename_tag}.png'
+        plt.savefig(os.path.join(OUT_DIR, fname), dpi=150, bbox_inches='tight')
+        plt.close()
+        print(f'Saved: {fname}')
+
+    # Summary table
+    rows = []
+    for dataset in DATASETS:
+        for model in MODELS:
+            for temp in TEMPERATURES:
+                gold_vals = [r['gold_similarity'] for r in records
+                             if r['dataset'] == dataset and r['model'] == model and r['temperature'] == temp]
+                ctx_vals  = [r['context_similarity'] for r in records
+                             if r['dataset'] == dataset and r['model'] == model and r['temperature'] == temp]
+                if not gold_vals:
+                    continue
+                rows.append([dataset, model, str(temp),
+                             f'{np.mean(gold_vals):.4f}',
+                             f'{np.mean(ctx_vals):.4f}' if ctx_vals else 'N/A'])
+
+    cols = ['Dataset', 'Model', 'Temperature', 'Mean GoldSim', 'Mean ContextSim']
+    _print_table(rows, cols, 'Temperature Effect — Mean Scores per Model per Dataset')
+    _table_figure(rows, cols,
+                  'Effect of Temperature on SNEA-SBERT Scores',
+                  '12_temperature_table.png',
+                  figsize=(16, 0.4 * (len(rows) + 1) + 0.8))
+
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+
 if __name__ == '__main__':
-    print('Loading scored CSVs...')
+    print('Loading scored CSVs from Results_KGs_with_temps/ ...')
+    print(f'Data  : {RESULTS_DIR}')
+    print(f'Output: {OUT_DIR}\n')
     records = load_all()
     if not records:
         exit(1)
@@ -651,5 +766,6 @@ if __name__ == '__main__':
     plot_significance(records)
     plot_radar(records)
     plot_heatmap(records)
+    plot_temperature_trend(records)
 
     print(f'\nAll outputs saved to: {OUT_DIR}/')
