@@ -119,10 +119,7 @@ def _process_batch(batch_data):
     16 GiB card).
 
     Args:
-        batch_data: (rows, base_cols, active_scores, anchor_col, target_col)
-            anchor_col / target_col: if set, use generic column mode —
-            computes fn(anchor_col, target_col) and stores as active_scores[0].
-            If None, uses default kg_llm/kg_gold/kg_context logic.
+        batch_data: (rows: list[dict], base_cols: list[str], active_scores: list[str])
 
     Returns:
         list[dict] with all original columns + the requested score columns.
@@ -130,26 +127,20 @@ def _process_batch(batch_data):
     # pylint: disable=import-outside-toplevel
     from Methods.snea_sbert import calculate_snea_sbert_similarity as fn
 
-    rows, base_cols, active_scores, anchor_col, target_col = batch_data
+    rows, base_cols, active_scores = batch_data
     active_set = set(active_scores)
     results = []
 
     for row in rows:
+        kg_gold = parse_triples(row.get('kg_gold',    ''))
+        kg_llm  = parse_triples(row.get('kg_llm',     ''))
+        kg_ctx  = parse_triples(row.get('kg_context', ''))
+
         result = {col: row.get(col, '') for col in base_cols}
-
-        if anchor_col and target_col:
-            kg_a = parse_triples(row.get(anchor_col, ''))
-            kg_b = parse_triples(row.get(target_col, ''))
-            result[active_scores[0]] = _snea_score(fn, kg_a, kg_b)
-        else:
-            kg_gold = parse_triples(row.get('kg_gold',    ''))
-            kg_llm  = parse_triples(row.get('kg_llm',     ''))
-            kg_ctx  = parse_triples(row.get('kg_context', ''))
-
-            if 'snea_sbert_gold_llm' in active_set:
-                result['snea_sbert_gold_llm'] = _snea_score(fn, kg_llm, kg_gold)
-            if 'snea_sbert_ctx_llm' in active_set:
-                result['snea_sbert_ctx_llm']  = _snea_score(fn, kg_llm, kg_ctx)
+        if 'snea_sbert_gold_llm' in active_set:
+            result['snea_sbert_gold_llm'] = _snea_score(fn, kg_llm, kg_gold)
+        if 'snea_sbert_ctx_llm' in active_set:
+            result['snea_sbert_ctx_llm']  = _snea_score(fn, kg_llm, kg_ctx)
 
         results.append(result)
         gc.collect()
@@ -165,9 +156,7 @@ def process_file(input_path, output_path, limit=None,
                  use_multiprocessing=False,
                  workers=DEFAULT_WORKERS,
                  batch_size=DEFAULT_BATCH_SIZE,
-                 active_scores=None,
-                 anchor_col=None,
-                 target_col=None):
+                 active_scores=None):
 
     if active_scores is None:
         active_scores = SCORE_COLS
@@ -188,18 +177,14 @@ def process_file(input_path, output_path, limit=None,
     tmp_path = output_path.with_suffix('.tmp')
 
     mode = f'multiprocess (workers={workers}, batch={batch_size})' if use_multiprocessing else 'single-process'
-    if anchor_col and target_col:
-        print(f'    {total} rows  |  anchor={anchor_col} → target={target_col}  |  score={active_scores[0]}  |  {mode}', flush=True)
-    else:
-        print(f'    {total} rows  |  scores: {", ".join(active_scores)}  |  {mode}', flush=True)
+    print(f'    {total} rows  |  scores: {", ".join(active_scores)}  |  {mode}', flush=True)
 
     with open(tmp_path, 'w', newline='', encoding='utf-8') as out_f:
         writer = csv.DictWriter(out_f, fieldnames=fieldnames, extrasaction='ignore')
         writer.writeheader()
 
         if use_multiprocessing:
-            batches   = [(list(chunk), base_cols, active_scores, anchor_col, target_col)
-                         for chunk in _chunk(rows, batch_size)]
+            batches   = [(list(chunk), base_cols, active_scores) for chunk in _chunk(rows, batch_size)]
             n_batches = len(batches)
             ordered   = [None] * n_batches
             done      = 0
@@ -234,19 +219,14 @@ def process_file(input_path, output_path, limit=None,
             for idx, row in enumerate(rows, 1):
                 print(f'    [{idx:>4}/{total}]', end=' ', flush=True)
 
-                if anchor_col and target_col:
-                    kg_a = parse_triples(row.get(anchor_col, ''))
-                    kg_b = parse_triples(row.get(target_col, ''))
-                    row[active_scores[0]] = _snea_score(fn, kg_a, kg_b)
-                else:
-                    kg_gold = parse_triples(row.get('kg_gold',    ''))
-                    kg_llm  = parse_triples(row.get('kg_llm',     ''))
-                    kg_ctx  = parse_triples(row.get('kg_context', ''))
+                kg_gold = parse_triples(row.get('kg_gold',    ''))
+                kg_llm  = parse_triples(row.get('kg_llm',     ''))
+                kg_ctx  = parse_triples(row.get('kg_context', ''))
 
-                    if 'snea_sbert_gold_llm' in active_set:
-                        row['snea_sbert_gold_llm'] = _snea_score(fn, kg_llm, kg_gold)
-                    if 'snea_sbert_ctx_llm' in active_set:
-                        row['snea_sbert_ctx_llm']  = _snea_score(fn, kg_llm, kg_ctx)
+                if 'snea_sbert_gold_llm' in active_set:
+                    row['snea_sbert_gold_llm'] = _snea_score(fn, kg_llm, kg_gold)
+                if 'snea_sbert_ctx_llm' in active_set:
+                    row['snea_sbert_ctx_llm']  = _snea_score(fn, kg_llm, kg_ctx)
 
                 writer.writerow(row)
                 gc.collect()
@@ -289,13 +269,6 @@ def main():
                              '(e.g. /content/drive/MyDrive/Results_KGs_with_temps). '
                              'Subfolder structure is preserved. Useful in Colab so results '
                              'are saved even if the session times out mid-run.')
-    parser.add_argument('--anchor-col', type=str, default=None,
-                        help='Generic mode: column to use as anchor KG (drives triple matching). '
-                             'Must be paired with --target-col. '
-                             'Example: --anchor-col kg_1 --target-col kg_2')
-    parser.add_argument('--target-col', type=str, default=None,
-                        help='Generic mode: column to use as target KG (gets filtered). '
-                             'Must be paired with --anchor-col.')
     args = parser.parse_args()
 
     if args.multiprocessing:
@@ -320,9 +293,7 @@ def main():
         process_file(inp, out, limit=args.limit,
                      use_multiprocessing=args.multiprocessing,
                      workers=args.workers, batch_size=args.batch_size,
-                     active_scores=args.scores,
-                     anchor_col=args.anchor_col,
-                     target_col=args.target_col)
+                     active_scores=args.scores)
         print(f'Saved → {out}')
         if args.gdrive_dir:
             gdrive_dest = Path(args.gdrive_dir) / out.name
