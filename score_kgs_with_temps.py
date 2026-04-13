@@ -4,14 +4,15 @@ Compute SNEA-SBERT (alpha=0.5) similarity scores for all KG files in
 KGs_with_temps/ and write results to Results_KGs_with_temps/ preserving
 the same subfolder / filename structure.
 
-For each row, three pair-wise scores are computed. In each call,
-kg1 is the anchor that drives triple filtering and kg2 is filtered
-against it (match_and_filter_triples(kg1, kg2)).
+For each row, two pair-wise scores are computed following the KEA paper
+(Haskins & Adams, 2025): kg_llm is the claim/anchor that drives triple
+filtering, and the reference KG (gold or context) is filtered against it
+(match_and_filter_triples(kg_llm, kg_ref)).
 
-  Score                │ kg1 (anchor)  │ kg2 (filtered) │ What it measures
+  Score                │ kg1 / anchor  │ kg2 (filtered) │ What it measures
   ─────────────────────┼───────────────┼────────────────┼──────────────────────────────────────────────
-  snea_sbert_gold_llm  │ kg_gold       │ kg_llm         │ How much of LLM output matches gold
-  snea_sbert_ctx_llm   │ kg_context    │ kg_llm         │ How much of LLM output is grounded in context
+  snea_sbert_gold_llm  │ kg_llm        │ kg_gold        │ How much of gold is covered by LLM output
+  snea_sbert_ctx_llm   │ kg_llm        │ kg_context     │ How much of context is covered by LLM output
 
 Output columns = all original columns + the requested score columns.
 
@@ -61,8 +62,8 @@ OUTPUT_DIR = _HERE / 'Results_KGs_with_temps'
 ALPHA      = 0.5
 
 SCORE_COLS = [
-    'snea_sbert_gold_llm',   # anchor=kg_gold,    filtered=kg_llm  → how much of LLM matches gold
-    'snea_sbert_ctx_llm',    # anchor=kg_context, filtered=kg_llm  → how much of LLM is grounded in context
+    'snea_sbert_gold_llm',   # anchor=kg_llm, filtered=kg_gold    → KEA-aligned: claim drives matching
+    'snea_sbert_ctx_llm',    # anchor=kg_llm, filtered=kg_context → KEA-aligned: claim drives matching
 ]
 
 DEFAULT_WORKERS    = 4
@@ -137,9 +138,9 @@ def _process_batch(batch_data):
 
         result = {col: row.get(col, '') for col in base_cols}
         if 'snea_sbert_gold_llm' in active_set:
-            result['snea_sbert_gold_llm'] = _snea_score(fn, kg_gold, kg_llm)
+            result['snea_sbert_gold_llm'] = _snea_score(fn, kg_llm, kg_gold)
         if 'snea_sbert_ctx_llm' in active_set:
-            result['snea_sbert_ctx_llm']  = _snea_score(fn, kg_ctx,  kg_llm)
+            result['snea_sbert_ctx_llm']  = _snea_score(fn, kg_llm, kg_ctx)
 
         results.append(result)
         gc.collect()
@@ -223,9 +224,9 @@ def process_file(input_path, output_path, limit=None,
                 kg_ctx  = parse_triples(row.get('kg_context', ''))
 
                 if 'snea_sbert_gold_llm' in active_set:
-                    row['snea_sbert_gold_llm'] = _snea_score(fn, kg_gold, kg_llm)
+                    row['snea_sbert_gold_llm'] = _snea_score(fn, kg_llm, kg_gold)
                 if 'snea_sbert_ctx_llm' in active_set:
-                    row['snea_sbert_ctx_llm']  = _snea_score(fn, kg_ctx,  kg_llm)
+                    row['snea_sbert_ctx_llm']  = _snea_score(fn, kg_llm, kg_ctx)
 
                 writer.writerow(row)
                 gc.collect()
