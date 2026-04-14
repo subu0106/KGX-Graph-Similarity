@@ -41,10 +41,10 @@ from scipy import stats
 
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 RESULTS_DIR = os.path.normpath(
-    os.path.join(SCRIPT_DIR, '..', '..', '..', 'Results_KGs_with_temps')
+    os.path.join(SCRIPT_DIR, '..', '..', '..', 'Results_KGs_with_temps_final')
 )
 OUT_DIR = os.path.normpath(
-    os.path.join(SCRIPT_DIR, '..', 'benchmark_plots_with_temps')
+    os.path.join(RESULTS_DIR, 'Analysis_plot_temps')
 )
 os.makedirs(OUT_DIR, exist_ok=True)
 
@@ -740,6 +740,58 @@ def plot_temperature_trend(records):
 
 
 # ---------------------------------------------------------------------------
+# Analysis 13 — Evaluation results table at T=0
+# ---------------------------------------------------------------------------
+
+def plot_eval_table_t0(records, temperature=0.0):
+    """
+    Table of mean GoldSim / CtxSim / CUS per model per dataset at a single
+    temperature (default T=0). Bold marks the best value per metric per dataset.
+    """
+    t0 = [r for r in records if abs(r['temperature'] - temperature) < 1e-6]
+    if not t0:
+        print(f'No records found for temperature={temperature}')
+        return
+
+    rows = []
+    for dataset in ['MesaQA', 'PubMedQA']:
+        # Compute means per model
+        means = {}
+        for model in MODELS:
+            sub = [r for r in t0 if r['dataset'] == dataset and r['model'] == model]
+            if sub:
+                means[model] = (
+                    np.mean([r['gold_similarity']    for r in sub]),
+                    np.mean([r['context_similarity'] for r in sub]),
+                    np.mean([r['cus']                for r in sub]),
+                )
+
+        if not means:
+            continue
+
+        best_gold = max(v[0] for v in means.values())
+        best_ctx  = max(v[1] for v in means.values())
+        best_cus  = max(v[2] for v in means.values())
+
+        for model in MODELS:
+            if model not in means:
+                continue
+            g, c, u = means[model]
+            rows.append([
+                dataset,
+                model,
+                f'{"*" if abs(g - best_gold) < 1e-6 else ""}{g:.4f}',
+                f'{"*" if abs(c - best_ctx)  < 1e-6 else ""}{c:.4f}',
+                f'{"*" if abs(u - best_cus)  < 1e-6 else ""}{u:.4f}',
+            ])
+
+    cols = ['Dataset', 'Model', 'GoldSim', 'CtxSim', 'CUS']
+    title = f'LLM Evaluation Results — Mean per Model per Dataset (T={temperature})\n* = best per metric per dataset'
+    _print_table(rows, cols, title)
+    _table_figure(rows, cols, title, f'13_eval_table_t{temperature}.png', figsize=(10, 0.4 * len(rows) + 1.2))
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
@@ -767,5 +819,6 @@ if __name__ == '__main__':
     plot_radar(records)
     plot_heatmap(records)
     plot_temperature_trend(records)
+    plot_eval_table_t0(records, temperature=0.0)
 
     print(f'\nAll outputs saved to: {OUT_DIR}/')
